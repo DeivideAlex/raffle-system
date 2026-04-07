@@ -203,9 +203,10 @@ export function RafflePage() {
 
       {!isEnded && (
         <FloatingCart 
-          selectedCount={selectedNumbers.length} 
-          totalAmount={totalAmount} 
-          onCheckout={handleCheckoutClick} 
+          selectedNumbers={selectedNumbers} 
+          ticketPrice={parseFloat(raffle.ticketPrice)} 
+          onCheckout={handleCheckoutClick}
+          onClose={() => setSelectedNumbers([])} 
         />
       )}
 
