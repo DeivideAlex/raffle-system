@@ -6,7 +6,6 @@ port = 54321
 [db]
 port = 54322
 shadow_port = 54320
-pull_url = ""
 
 [studio]
 port = 54323
