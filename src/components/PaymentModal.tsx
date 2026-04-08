@@ -87,6 +87,14 @@ export function PaymentModal({
                   alt="PIX QR Code"
                   className="w-[200px] h-[200px]"
                 />
+              ) : initPoint ? (
+                <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-center p-4 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                  <p className="text-xs text-slate-500 font-semibold mb-2">Pague pelo botão abaixo:</p>
+                  <div className="bg-blue-600 text-white rounded-full p-2 mb-2">
+                    <MapPin className="h-6 w-6" />
+                  </div>
+                  <p className="text-[10px] text-slate-400">QR Code indisponível no momento. Use o Checkout Seguro.</p>
+                </div>
               ) : (
                 <div className="w-[200px] h-[200px] bg-slate-100 animate-pulse rounded-lg" />
               )}
@@ -105,7 +113,7 @@ export function PaymentModal({
                  <input 
                   type="text" 
                   readOnly 
-                  value={pixCode || 'Gerando código...'} 
+                  value={pixCode || (initPoint ? 'Pague via Checkout Seguro' : 'Gerando código...')} 
                   className="w-full pr-12 pl-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-500 font-mono outline-none"
                  />
                  <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-100" onClick={handleCopyCode} disabled={!pixCode}>

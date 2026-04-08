@@ -10,6 +10,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body = req.body;
+    // @ts-ignore - Vercel injeta o process globalmente
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
     if (!token) {
