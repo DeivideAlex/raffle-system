@@ -27,6 +27,13 @@ export default async function handler(req: any, res: any) {
           unit_price: body.totalAmount
         }
       ],
+      payment_methods: {
+        excluded_payment_types: [
+          { id: "ticket" } // Excluir boleto se quiser focar em PIX/Cartão
+        ],
+        installments: 12, // Permitir parcelamento
+        default_payment_method_id: "pix" // Sugerir PIX como padrão
+      },
       external_reference: `raffle_${body.raffleId}_${Date.now()}`
     };
 
