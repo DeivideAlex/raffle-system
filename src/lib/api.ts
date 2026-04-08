@@ -1,9 +1,8 @@
-import { getSupabaseFunctionUrl } from '@/utils/supabase/info';
-import { RaffleData, Purchase } from '@/app/types';
+import { Purchase } from '@/app/types';
 
-const FN_URL = getSupabaseFunctionUrl('dynamic-action');
+// O Vercel lida com /api/ nativamente
+const FN_URL = '/api';
 
-// Utility para capturar erros
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
