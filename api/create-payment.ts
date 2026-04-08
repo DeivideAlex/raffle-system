@@ -15,55 +15,14 @@ export default async function handler(req: Request) {
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
     if (!token) {
-      return new Response(JSON.stringify({ 
-        error: 'Token do Mercado Pago não configurado nas variáveis de ambiente da Vercel.' 
-      }), {
+      return new Response(JSON.stringify({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Diagnostic log if it fails unauthorized (we use it in the catch block if needed)
-    console.log(`Iniciando tentativa de pagamento com token iniciado em: ${token.substring(0, 7)}...`);
-    const paymentData = {
-      transaction_amount: body.totalAmount,
-      description: `Rifa ${body.raffleName} - ${body.numbers.length} números`,
-      payment_method_id: 'pix',
-      payer: {
-        email: body.email || 'comprador@exemplo.com',
-        first_name: 'Comprador',
-        last_name: 'Rifa',
-        phone: {
-          number: body.phone
-        }
-      },
-      external_reference: `raffle_${body.raffleId}_${Date.now()}`
-    };
-
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'X-Idempotency-Key': Date.now().toString()
-      },
-      body: JSON.stringify(paymentData)
-    });
-    
-    const mpData = await mpResponse.json();
-
-    if (!mpResponse.ok) {
-      // Retorna o erro detalhado do Mercado Pago para debug
-      return new Response(JSON.stringify({ 
-        error: 'Erro no Mercado Pago (Pagamento)', 
-        details: mpData 
-      }), {
-        status: mpResponse.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Também criar uma preferência para ter um link de checkout como backup
+    // 1. Tentar criar a Preferência PRIMEIRO (Checkout Pro)
+    // Se isso falhar com 401, o Token definitivamente está errado.
     const preferenceData = {
       items: [
         {
@@ -73,7 +32,7 @@ export default async function handler(req: Request) {
           unit_price: body.totalAmount
         }
       ],
-      external_reference: paymentData.external_reference
+      external_reference: `raffle_${body.raffleId}_${Date.now()}`
     };
 
     const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -89,13 +48,62 @@ export default async function handler(req: Request) {
 
     if (!prefResponse.ok) {
         return new Response(JSON.stringify({ 
-          error: 'Erro no Mercado Pago (Preferência)', 
+          error: 'Token Inválido ou sem permissão (Preferência)', 
           details: prefData 
         }), {
           status: prefResponse.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
+
+    // 2. Agora tentar criar o PIX Direto
+    const paymentData = {
+      transaction_amount: body.totalAmount,
+      description: `Rifa ${body.raffleName} - ${body.numbers.length} números`,
+      payment_method_id: 'pix',
+      payer: {
+        email: body.email || 'comprador@exemplo.com',
+        first_name: 'Comprador',
+        last_name: 'Rifa',
+        phone: {
+          number: body.phone
+        }
+      },
+      external_reference: preferenceData.external_reference
+    };
+
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': Date.now().toString()
+      },
+      body: JSON.stringify(paymentData)
+    });
+    
+    const mpData = await mpResponse.json();
+
+    // Se o PIX direto falhar mas a preferência deu certo, retornamos apenas a preferência
+    if (!mpResponse.ok) {
+      return new Response(JSON.stringify({
+        pix_code: null,
+        init_point: prefData.init_point,
+        warning: 'Não foi possível gerar PIX direto. Use o botão de Checkout.',
+        details: mpData
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({
+      pix_code: mpData.point_of_interaction.transaction_data.qr_code,
+      qr_code_64: mpData.point_of_interaction.transaction_data.qr_code_base64,
+      init_point: prefData.init_point,
+      paymentId: mpData.id
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
     return new Response(JSON.stringify({
       pix_code: mpData.point_of_interaction.transaction_data.qr_code,
