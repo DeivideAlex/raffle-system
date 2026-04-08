@@ -12,7 +12,10 @@ export default async function handler(req: Request) {
 
   try {
     const body = await req.json();
-    const purchaseId = `purchase:${body.phone}:${Date.now()}`;
+    // Limpar o telefone (apenas números)
+    const normalizedPhone = body.phone.replace(/\D/g, '');
+    const purchaseId = `purchase:${normalizedPhone}:${Date.now()}`;
+    body.phone = normalizedPhone;
     
     const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     // Tenta usar a chave de serviço ou a anônima

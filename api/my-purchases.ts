@@ -12,10 +12,15 @@ export default async function handler(req: Request) {
 
   try {
     const url = new URL(req.url);
-    const phone = url.searchParams.get('phone');
-    if (!phone) throw new Error('Phone required');
+    const rawPhone = url.searchParams.get('phone');
+    if (!rawPhone) throw new Error('Phone required');
     
+    // @ts-ignore
+    const phone = rawPhone.replace(/\D/g, '');
+    
+    // @ts-ignore
     const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    // @ts-ignore
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseKey) {
