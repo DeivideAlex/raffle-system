@@ -17,6 +17,7 @@ export const api = {
     raffleName: string;
     numbers: number[];
     phone: string;
+    email: string;
     totalAmount: number;
   }) => {
     const res = await fetch(`${FN_URL}/create-payment`, {

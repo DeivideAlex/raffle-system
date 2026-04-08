@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, MapPin, QrCode } from 'lucide-react';
+import { Copy, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentModalProps {
@@ -18,9 +18,18 @@ interface PaymentModalProps {
   numbers: number[];
   onPaid: () => void;
   initPoint?: string;
+  pixCode?: string;
 }
 
-export function PaymentModal({ isOpen, onOpenChange, totalAmount, numbers, onPaid, initPoint }: PaymentModalProps) {
+export function PaymentModal({ 
+  isOpen, 
+  onOpenChange, 
+  totalAmount, 
+  numbers, 
+  onPaid, 
+  initPoint,
+  pixCode = '00020126360014BR.GOV.BCB.PIX...' // Default placeholder
+}: PaymentModalProps) {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
 
   useEffect(() => {
@@ -47,7 +56,7 @@ export function PaymentModal({ isOpen, onOpenChange, totalAmount, numbers, onPai
   const secs = timeLeft % 60;
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText('00020126360014BR.GOV.BCB.PIX...');
+    navigator.clipboard.writeText(pixCode);
     toast.success('Código PIX copiado!');
   };
 
@@ -71,8 +80,16 @@ export function PaymentModal({ isOpen, onOpenChange, totalAmount, numbers, onPai
 
         <div className="flex flex-col md:flex-row gap-6 p-2 md:p-6 items-center">
           <div className="flex-1 flex flex-col items-center">
-            <div className="w-48 h-48 bg-slate-100 rounded-xl flex items-center justify-center border-4 border-dashed border-slate-300">
-              <QrCode className="w-24 h-24 text-slate-400 opacity-50" />
+            <div className="p-4 bg-white rounded-2xl shadow-inner border border-slate-100 min-h-[234px] min-w-[234px] flex items-center justify-center">
+              {pixCode ? (
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`} 
+                  alt="PIX QR Code"
+                  className="w-[200px] h-[200px]"
+                />
+              ) : (
+                <div className="w-[200px] h-[200px] bg-slate-100 animate-pulse rounded-lg" />
+              )}
             </div>
             
             <p className="mt-4 font-mono text-xl font-bold text-red-500 animate-pulse bg-red-50 px-4 py-1 rounded-full">
@@ -88,10 +105,10 @@ export function PaymentModal({ isOpen, onOpenChange, totalAmount, numbers, onPai
                  <input 
                   type="text" 
                   readOnly 
-                  value="00020126360014BR.GOV.BCB.PIX..." 
+                  value={pixCode || 'Gerando código...'} 
                   className="w-full pr-12 pl-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-500 font-mono outline-none"
                  />
-                 <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-100" onClick={handleCopyCode}>
+                 <Button size="icon" variant="ghost" className="absolute right-1 top-1 h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-100" onClick={handleCopyCode} disabled={!pixCode}>
                    <Copy className="h-4 w-4" />
                  </Button>
                </div>

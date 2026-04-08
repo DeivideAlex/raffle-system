@@ -23,6 +23,7 @@ export function RafflePage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [buyerInfo, setBuyerInfo] = useState<{ phone: string, email: string } | null>(null);
   const [initPoint, setInitPoint] = useState<string | undefined>();
+  const [pixCode, setPixCode] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Load raffle and numbers data
@@ -84,10 +85,12 @@ export function RafflePage() {
         raffleName: raffle.prizeName,
         numbers: selectedNumbers,
         phone,
+        email,
         totalAmount
       });
       
       setInitPoint(mpData.init_point);
+      setPixCode(mpData.pix_code);
 
       // Set numbers to reserved locally before opening payment
       const updatedNumbers = [...numbers];
@@ -242,6 +245,7 @@ export function RafflePage() {
           numbers={selectedNumbers} 
           onPaid={handlePaymentConfirmed} 
           initPoint={initPoint}
+          pixCode={pixCode}
         />
       )}
     </div>
