@@ -12,11 +12,11 @@ export default async function handler(req: Request) {
 
   try {
     const url = new URL(req.url);
-    const rawPhone = url.searchParams.get('phone');
-    if (!rawPhone) throw new Error('Phone required');
+    const search = url.searchParams.get('phone') || url.searchParams.get('email');
+    if (!search) throw new Error('Termo de busca (telefone ou email) é obrigatário');
     
     // @ts-ignore
-    const phone = rawPhone.replace(/\D/g, '');
+    const normalizedSearch = search.replace(/\D/g, ''); // Para telefone
     
     // @ts-ignore
     const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
@@ -27,7 +27,12 @@ export default async function handler(req: Request) {
         throw new Error('Supabase key not configured in Vercel Environment Variables');
     }
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=like.purchase:${phone}:*`, {
+    // Buscar por chave (telefone) OU por dentro do JSON (email)
+    const query = search.includes('@') 
+      ? `value->>email=eq.${search}` 
+      : `key=like.purchase:${normalizedSearch}:*`;
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&${query}`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey,
