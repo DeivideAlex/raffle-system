@@ -14,7 +14,17 @@ export default async function handler(req: Request) {
     const body = await req.json();
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
-    // Criar pagamento PIX diretamente para obter o QR Code
+    if (!token) {
+      return new Response(JSON.stringify({ 
+        error: 'Token do Mercado Pago não configurado nas variáveis de ambiente da Vercel.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Diagnostic log if it fails unauthorized (we use it in the catch block if needed)
+    console.log(`Iniciando tentativa de pagamento com token iniciado em: ${token.substring(0, 7)}...`);
     const paymentData = {
       transaction_amount: body.totalAmount,
       description: `Rifa ${body.raffleName} - ${body.numbers.length} números`,
