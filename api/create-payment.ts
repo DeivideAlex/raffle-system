@@ -21,6 +21,8 @@ export default async function handler(req: Request) {
       payment_method_id: 'pix',
       payer: {
         email: body.email || 'comprador@exemplo.com',
+        first_name: 'Comprador',
+        last_name: 'Rifa',
         phone: {
           number: body.phone
         }
@@ -41,7 +43,14 @@ export default async function handler(req: Request) {
     const mpData = await mpResponse.json();
 
     if (!mpResponse.ok) {
-      throw new Error(mpData.message || 'Erro ao gerar pagamento PIX');
+      // Retorna o erro detalhado do Mercado Pago para debug
+      return new Response(JSON.stringify({ 
+        error: 'Erro no Mercado Pago (Pagamento)', 
+        details: mpData 
+      }), {
+        status: mpResponse.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Também criar uma preferência para ter um link de checkout como backup
@@ -68,6 +77,16 @@ export default async function handler(req: Request) {
     
     const prefData = await prefResponse.json();
 
+    if (!prefResponse.ok) {
+        return new Response(JSON.stringify({ 
+          error: 'Erro no Mercado Pago (Preferência)', 
+          details: prefData 
+        }), {
+          status: prefResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+
     return new Response(JSON.stringify({
       pix_code: mpData.point_of_interaction.transaction_data.qr_code,
       qr_code_64: mpData.point_of_interaction.transaction_data.qr_code_base64,
@@ -79,7 +98,7 @@ export default async function handler(req: Request) {
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 }
