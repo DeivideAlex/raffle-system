@@ -1,28 +1,22 @@
-export const config = { runtime: 'edge' };
-
-export default async function handler(req: Request) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
+export default async function handler(req: any, res: any) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return res.status(200).end();
   }
 
   try {
-    const body = await req.json();
+    const body = req.body;
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
     if (!token) {
-      return new Response(JSON.stringify({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado.' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado na Vercel.' });
     }
 
     // 1. Tentar criar a Preferência PRIMEIRO (Checkout Pro)
-    // Se isso falhar com 401, o Token definitivamente está errado.
     const preferenceData = {
       items: [
         {
@@ -47,12 +41,9 @@ export default async function handler(req: Request) {
     const prefData = await prefResponse.json();
 
     if (!prefResponse.ok) {
-        return new Response(JSON.stringify({ 
+        return res.status(prefResponse.status).json({ 
           error: 'Token Inválido ou sem permissão (Preferência)', 
           details: prefData 
-        }), {
-          status: prefResponse.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
 
@@ -61,6 +52,7 @@ export default async function handler(req: Request) {
       transaction_amount: body.totalAmount,
       description: `Rifa ${body.raffleName} - ${body.numbers.length} números`,
       payment_method_id: 'pix',
+      notification_url: 'https://raffle-system-chi.vercel.app/api/webhooks', // URL opcional para retorno
       payer: {
         email: body.email || 'comprador@exemplo.com',
         first_name: 'Comprador',
@@ -84,39 +76,23 @@ export default async function handler(req: Request) {
     
     const mpData = await mpResponse.json();
 
-    // Se o PIX direto falhar mas a preferência deu certo, retornamos apenas a preferência
     if (!mpResponse.ok) {
-      return new Response(JSON.stringify({
+      return res.status(200).json({
         pix_code: null,
         init_point: prefData.init_point,
-        warning: 'Não foi possível gerar PIX direto. Use o botão de Checkout.',
+        warning: 'Não foi possível gerar PIX direto. Use o Checkout.',
         details: mpData
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({
+    return res.status(200).json({
       pix_code: mpData.point_of_interaction.transaction_data.qr_code,
       qr_code_64: mpData.point_of_interaction.transaction_data.qr_code_base64,
       init_point: prefData.init_point,
       paymentId: mpData.id
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-    return new Response(JSON.stringify({
-      pix_code: mpData.point_of_interaction.transaction_data.qr_code,
-      qr_code_64: mpData.point_of_interaction.transaction_data.qr_code_base64,
-      init_point: prefData.init_point,
-      paymentId: mpData.id
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
