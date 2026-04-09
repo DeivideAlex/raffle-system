@@ -138,14 +138,27 @@ serve(async (req: Request) => {
       });
     }
 
-    // 8. /my-purchases
     if (path.endsWith('/my-purchases') && req.method === 'GET') {
-      const phone = url.searchParams.get('phone');
-      const { data, error } = await supabase.from('purchases').select('*').eq('phone', phone?.replace(/\D/g, ''));
+      const term = url.searchParams.get('phone');
+      if (!term) throw new Error('Search term required');
+      
+      const phoneOnly = term.replace(/\D/g, '');
+      const { data, error } = await supabase
+        .from('purchases')
+        .select('*')
+        .or(`phone.eq.${phoneOnly},email.eq.${term}`);
+        
       if (error) throw error;
       const formatted = data.map(p => ({
-        id: p.id, raffleId: p.raffle_id, numbers: p.numbers, phone: p.phone,
-        email: p.email, totalAmount: p.total_amount, status: p.status, purchaseDate: p.purchase_date
+        id: p.id,
+        raffleId: p.raffle_id,
+        raffleName: p.raffle_name,
+        numbers: p.numbers,
+        phone: p.phone,
+        email: p.email,
+        totalAmount: p.total_amount,
+        status: p.status,
+        purchaseDate: p.purchase_date
       }));
       return new Response(JSON.stringify(formatted), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
