@@ -21,8 +21,23 @@ serve(async (req: Request) => {
   try {
     if (path.endsWith('/save-raffle') && req.method === 'POST') {
       const body = await req.json();
-      const { error } = await supabase.from('raffles').upsert(body);
-      if (error) throw error;
+      
+      // Ensure numeric types are correct for Postgres
+      const raffleData = {
+        ...body,
+        ticketPrice: parseFloat(body.ticketPrice),
+        totalNumbers: parseInt(body.totalNumbers)
+      };
+
+      const { data, error } = await supabase.from('raffles').upsert(raffleData);
+      
+      if (error) {
+        console.error('Error saving raffle:', error);
+        return new Response(JSON.stringify({ error: error.message, details: error.details }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       return new Response(JSON.stringify({ success: true, id: body.id }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -49,7 +64,7 @@ serve(async (req: Request) => {
       const { raffleId, tickets } = await req.json();
       const ticketsToUpsert = tickets.map((t: any) => ({
         raffleId: raffleId,
-        number: t.number,
+        number: parseInt(t.number),
         status: t.status,
         ownerPhone: t.owner,
         ownerEmail: t.email,
@@ -135,7 +150,11 @@ serve(async (req: Request) => {
 
     if (path.endsWith('/save-purchase') && req.method === 'POST') {
       const body = await req.json();
-      const { error } = await supabase.from('purchases').upsert(body);
+      const purchaseData = {
+        ...body,
+        totalAmount: parseFloat(body.totalAmount)
+      };
+      const { error } = await supabase.from('purchases').upsert(purchaseData);
       if (error) throw error;
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -157,7 +176,8 @@ serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('SERVER ERROR:', error);
+    return new Response(JSON.stringify({ error: error.message, stack: error.stack }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
