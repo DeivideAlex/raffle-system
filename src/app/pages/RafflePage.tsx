@@ -106,31 +106,7 @@ export function RafflePage() {
     try {
       const totalAmount = selectedNumbers.length * parseFloat(raffle.ticketPrice);
 
-      const mpData = await api.createPayment({
-        raffleId: raffleId!,
-        raffleName: raffle.prizeName,
-        numbers: selectedNumbers,
-        phone,
-        email,
-        totalAmount
-      });
-      
-      setInitPoint(mpData.init_point);
-      setPixCode(mpData.pix_code);
-
-      // Save reservation to backend
-      await api.savePurchase({
-        raffleId: raffleId!,
-        raffleName: raffle.prizeName,
-        numbers: selectedNumbers,
-        phone,
-        email,
-        totalAmount,
-        status: 'pending',
-        purchaseDate: new Date().toISOString()
-      });
-      
-      // Set numbers to reserved locally before opening payment
+      // 1. Set numbers to reserved in DB immediately
       const updatedNumbers = [...numbers];
       selectedNumbers.forEach(num => {
         const target = updatedNumbers.find(n => n.number === num);
@@ -144,12 +120,43 @@ export function RafflePage() {
 
       setNumbers(updatedNumbers);
       await api.updateTickets(raffleId!, updatedNumbers);
-      
+
+      // 2. Save reservation/purchase record to DB
+      await api.savePurchase({
+        raffleId: raffleId!,
+        raffleName: raffle.prizeName,
+        numbers: selectedNumbers,
+        phone,
+        email,
+        totalAmount,
+        status: 'pending',
+        purchaseDate: new Date().toISOString()
+      });
+
       setBuyerInfo({ phone, email });
       setIsPhoneModalOpen(false);
       setIsPaymentModalOpen(true);
+
+      // 3. Generate Mercado Pago link (async, doesn't block the UI if it takes time)
+      try {
+        const mpData = await api.createPayment({
+          raffleId: raffleId!,
+          raffleName: raffle.prizeName,
+          numbers: selectedNumbers,
+          phone,
+          email,
+          totalAmount
+        });
+        
+        setInitPoint(mpData.init_point);
+        setPixCode(mpData.pix_code);
+      } catch (mpErr) {
+        console.error('MP Error:', mpErr);
+        toast.error('Ganhamos o seu registro! Mas houve um erro ao criar o link de pagamento. Tente novamente em Ver Meus números.');
+      }
+
     } catch (e: any) {
-      toast.error('Erro ao gerar pagamento: ' + e.message);
+      toast.error('Erro ao processar reserva: ' + e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -198,7 +205,7 @@ export function RafflePage() {
   const reservedCount = numbers.filter(n => n.status === 'reserved').length;
   const paidCount = numbers.filter(n => n.status === 'paid').length;
 
-  const isEnded = new Date(raffle.endDate) < new Date() || !!raffle.winnerNumber;
+  const isEnded = new Date(raffle.endDate) < new Date() || (raffle.winnerNumber !== null && raffle.winnerNumber !== undefined);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 pb-32">
@@ -216,7 +223,7 @@ export function RafflePage() {
 
         <StatusSummary free={freeCount} reserved={reservedCount} paid={paidCount} />
 
-        {raffle.winnerNumber !== undefined && (
+        {(raffle.winnerNumber !== null && raffle.winnerNumber !== undefined) && (
           <div className="mt-8 bg-yellow-400 p-6 rounded-2xl shadow-xl border-4 border-yellow-500 text-center animate-pulse">
             <h2 className="text-3xl font-black text-yellow-900 mb-2">🎉 TEMOS UM GANHADOR! 🎉</h2>
             <p className="text-xl font-bold text-yellow-800">
