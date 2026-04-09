@@ -1,12 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { set, get, getByPrefix } from './kv_store.ts';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Edge Function Deno Server
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -16,16 +19,80 @@ serve(async (req: Request) => {
   const path = url.pathname;
 
   try {
-    if (path.endsWith('/health')) {
-      return new Response(JSON.stringify({ status: 'ok', version: '2.0' }), {
+    if (path.endsWith('/save-raffle') && req.method === 'POST') {
+      const body = await req.json();
+      const { error } = await supabase.from('raffles').upsert(body);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, id: body.id }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (path.endsWith('/test-mp')) {
-      const token = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-      return new Response(JSON.stringify({ success: !!token }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    if (path.endsWith('/get-raffles') && req.method === 'GET') {
+      const { data, error } = await supabase.from('raffles').select('*').order('createdAt', { ascending: false });
+      if (error) throw error;
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (path.endsWith('/get-raffle') && req.method === 'GET') {
+      const id = url.searchParams.get('id');
+      const { data, error } = await supabase.from('raffles').select('*').eq('id', id).single();
+      if (error) throw error;
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (path.endsWith('/update-tickets') && req.method === 'POST') {
+      const { raffleId, tickets } = await req.json();
+      const ticketsToUpsert = tickets.map((t: any) => ({
+        raffleId: raffleId,
+        number: t.number,
+        status: t.status,
+        ownerPhone: t.owner,
+        ownerEmail: t.email,
+        reservedAt: t.reservedAt
+      }));
+      
+      const { error } = await supabase.from('tickets').upsert(ticketsToUpsert, { onConflict: 'raffleId,number' });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (path.endsWith('/get-tickets') && req.method === 'GET') {
+      const raffleId = url.searchParams.get('raffleId');
+      const { data, error } = await supabase.from('tickets').select('*').eq('raffleId', raffleId).order('number');
+      if (error) throw error;
+      const formatted = data.map((t: any) => ({
+        number: t.number,
+        status: t.status,
+        owner: t.ownerPhone,
+        email: t.ownerEmail,
+        reservedAt: t.reservedAt
+      }));
+      return new Response(JSON.stringify(formatted), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (path.endsWith('/get-winners') && req.method === 'GET') {
+      const { data, error } = await supabase.from('winners').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (path.endsWith('/save-winners') && req.method === 'POST') {
+      const winners = await req.json();
+      const { error } = await supabase.from('winners').upsert(winners);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -60,9 +127,7 @@ serve(async (req: Request) => {
       const mpData = await mpResponse.json();
 
       return new Response(JSON.stringify({
-        init_point: mpData.init_point,
-        sandbox_init_point: mpData.sandbox_init_point,
-        preferenceId: mpData.id
+        init_point: mpData.init_point, sandbox_init_point: mpData.sandbox_init_point, preferenceId: mpData.id
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -70,9 +135,9 @@ serve(async (req: Request) => {
 
     if (path.endsWith('/save-purchase') && req.method === 'POST') {
       const body = await req.json();
-      const purchaseId = `purchase:${body.phone}:${Date.now()}`;
-      await set(purchaseId, body);
-      return new Response(JSON.stringify({ success: true, id: purchaseId }), {
+      const { error } = await supabase.from('purchases').upsert(body);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -80,17 +145,18 @@ serve(async (req: Request) => {
     if (path.endsWith('/my-purchases') && req.method === 'GET') {
       const phone = url.searchParams.get('phone');
       if (!phone) throw new Error('Phone required');
-      const records = await getByPrefix(`purchase:${phone}:`);
-      return new Response(JSON.stringify(records), {
+      const { data, error } = await supabase.from('purchases').select('*').eq('phone', phone.replace(/\D/g, ''));
+      if (error) throw error;
+      return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ error: 'Endpoint not found' }), {
+    return new Response(JSON.stringify({ error: 'Endpoint not found: ' + path }), {
       status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
