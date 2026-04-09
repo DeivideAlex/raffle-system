@@ -1,7 +1,7 @@
 import { Purchase } from '@/app/types';
 
-// O Vercel lida com /api/ nativamente
-const FN_URL = '/api';
+const SUPABASE_URL = "https://ggafunjazgsxxjkbmiwv.supabase.co";
+export const FN_URL = `${SUPABASE_URL}/functions/v1/dynamic-action`;
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
@@ -39,6 +39,53 @@ export const api = {
 
   getMyPurchases: async (phone: string): Promise<Purchase[]> => {
     const res = await fetch(`${FN_URL}/my-purchases?phone=${encodeURIComponent(phone)}`);
+    return handleResponse(res);
+  },
+
+  getRaffles: async () => {
+    const res = await fetch(`${FN_URL}/get-raffles`);
+    return handleResponse(res);
+  },
+
+  getRaffle: async (id: string) => {
+    const res = await fetch(`${FN_URL}/get-raffle?id=${id}`);
+    return handleResponse(res);
+  },
+
+  saveRaffle: async (data: any) => {
+    const res = await fetch(`${FN_URL}/save-raffle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  getTickets: async (raffleId: string) => {
+    const res = await fetch(`${FN_URL}/get-tickets?raffleId=${raffleId}`);
+    return handleResponse(res);
+  },
+
+  updateTickets: async (raffleId: string, tickets: any[]) => {
+    const res = await fetch(`${FN_URL}/update-tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raffleId, tickets })
+    });
+    return handleResponse(res);
+  },
+
+  getWinners: async () => {
+    const res = await fetch(`${FN_URL}/get-winners`);
+    return handleResponse(res);
+  },
+
+  saveWinners: async (winners: any[]) => {
+    const res = await fetch(`${FN_URL}/save-winners`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(winners)
+    });
     return handleResponse(res);
   }
 };

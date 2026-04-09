@@ -5,28 +5,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { WinnersDrawer } from '@/components/WinnersDrawer';
 import { RaffleData } from '../types';
 import { Activity, Ticket } from 'lucide-react';
+import { api } from '@/lib/api';
+
 
 export function PublicHome() {
   const [raffles, setRaffles] = useState<RaffleData[]>([]);
   const [isWinnersOpen, setIsWinnersOpen] = useState(false);
 
   useEffect(() => {
-    // Load mock from localStorage
-    const keys = Object.keys(localStorage);
-    const loadedRaffles: RaffleData[] = [];
-    
-    keys.forEach(key => {
-      if (key.startsWith('raffle-') && !key.endsWith('-numbers')) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key) || '{}');
-          loadedRaffles.push({ ...data, id: key });
-        } catch (e) {
-          console.error(e);
-        }
+    const fetch = async () => {
+      try {
+        const data = await api.getRaffles();
+        setRaffles(data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } catch (e) {
+        console.error('Error fetching raffles:', e);
       }
-    });
-
-    setRaffles(loadedRaffles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    };
+    fetch();
   }, []);
 
   return (

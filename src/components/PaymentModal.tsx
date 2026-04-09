@@ -32,11 +32,11 @@ export function PaymentModal({
   numbers,
   onPaid 
 }: PaymentModalProps) {
-  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [timeLeft, setTimeLeft] = useState(10 * 60);
 
   useEffect(() => {
     if (!isOpen) {
-      setTimeLeft(15 * 60);
+      setTimeLeft(10 * 60);
       return;
     }
 
@@ -109,7 +109,7 @@ export function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] overflow-hidden">
+      <DialogContent className="sm:max-w-[700px] overflow-hidden bg-white border-0 shadow-2xl">
         <DialogHeader className="p-2 md:p-6 pb-0">
           <DialogTitle className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Pague via PIX</DialogTitle>
           <p className="text-slate-500 font-medium">Garanta seus {numbers.length} números por R$ {totalAmount.toFixed(2).replace('.', ',')}</p>

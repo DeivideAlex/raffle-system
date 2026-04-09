@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, BarChart3, Users, Ticket, Trash2, Eye, Trophy } from 'lucide-react';
 import { WinnerModal } from '@/components/WinnerModal';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { ShieldCheck } from 'lucide-react';
+
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -23,15 +26,13 @@ export function AdminDashboard() {
     loadRaffles();
   }, [navigate]);
 
-  const loadRaffles = () => {
-    const keys = Object.keys(localStorage);
-    const loaded: RaffleData[] = [];
-    keys.forEach(key => {
-      if (key.startsWith('raffle-') && !key.endsWith('-numbers')) {
-        loaded.push({ ...JSON.parse(localStorage.getItem(key)!), id: key });
-      }
-    });
-    setRaffles(loaded.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  const loadRaffles = async () => {
+    try {
+      const data = await api.getRaffles();
+      setRaffles(data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (error) {
+      toast.error('Erro ao carregar rifas do banco de dados');
+    }
   };
 
   const handleLogout = () => {
@@ -152,5 +153,3 @@ export function AdminDashboard() {
   );
 }
 
-// Helper para importar ShieldCheck missing em lucide do admin dashboard import acima
-import { ShieldCheck } from 'lucide-react';

@@ -9,6 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Winner } from '../app/types';
 import { Trophy, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+
 
 interface WinnersDrawerProps {
   isOpen: boolean;
@@ -20,8 +22,15 @@ export function WinnersDrawer({ isOpen, onOpenChange }: WinnersDrawerProps) {
 
   useEffect(() => {
     if (isOpen) {
-      const stored = JSON.parse(localStorage.getItem('winners') || '[]');
-      setWinners(stored.sort((a: Winner, b: Winner) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      const fetchWinners = async () => {
+        try {
+          const stored = await api.getWinners();
+          setWinners(stored.sort((a: Winner, b: Winner) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        } catch (e) {
+          console.error('Error fetching winners:', e);
+        }
+      };
+      fetchWinners();
     }
   }, [isOpen]);
 

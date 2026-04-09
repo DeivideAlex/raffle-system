@@ -30,38 +30,64 @@ export function RafflePage() {
   useEffect(() => {
     if (!raffleId) return;
 
-    try {
-      const dataStr = localStorage.getItem(raffleId);
-      if (!dataStr) {
-        toast.error('Rifa não encontrada');
-        navigate('/');
-        return;
-      }
-      
-      const raffleData: RaffleData = JSON.parse(dataStr);
-      setRaffle(raffleData);
+    const fetchData = async () => {
+      try {
+        const raffleData = await api.getRaffle(raffleId);
+        setRaffle(raffleData);
 
-      const numbersKey = `${raffleId}-numbers`;
-      const numbersStr = localStorage.getItem(numbersKey);
-      
-      if (numbersStr) {
-        setNumbers(JSON.parse(numbersStr));
-      } else {
-        // Initialize numbers if not found
-        const total = parseInt(raffleData.totalNumbers);
-        const initialNumbers: RaffleNumber[] = Array.from({ length: total }).map((_, i) => ({
-          number: i,
-          status: 'free'
-        }));
-        setNumbers(initialNumbers);
-        localStorage.setItem(numbersKey, JSON.stringify(initialNumbers));
-      }
+        const ticketsData = await api.getTickets(raffleId);
+        
+        if (ticketsData && Array.isArray(ticketsData) && ticketsData.length > 0) {
+          setNumbers(ticketsData);
+        } else {
+          // Initialize numbers if not found in DB
+          const total = parseInt(raffleData.totalNumbers);
+          const initialNumbers: RaffleNumber[] = Array.from({ length: total }).map((_, i) => ({
+            number: i,
+            status: 'free'
+          }));
+          setNumbers(initialNumbers);
+          await api.updateTickets(raffleId, initialNumbers);
+        }
 
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao carregar dados da rifa');
-    }
+      } catch (e: any) {
+        console.error(e);
+        toast.error('Erro ao carregar dados da rifa: ' + e.message);
+        // navigate('/'); // Optional: redirect if not found
+      }
+    };
+
+    fetchData();
   }, [raffleId, navigate, isPaymentModalOpen]); // Reload when payment finishes
+
+  // Cleanup expired reservations
+  useEffect(() => {
+    if (!raffleId || numbers.length === 0) return;
+
+    const interval = setInterval(async () => {
+      const now = new Date();
+      let changed = false;
+      const updatedNumbers = numbers.map(n => {
+        if (n.status === 'reserved' && n.reservedAt) {
+          const reservedDate = new Date(n.reservedAt);
+          const diffInMinutes = (now.getTime() - reservedDate.getTime()) / (1000 * 60);
+          
+          if (diffInMinutes >= 10) {
+            changed = true;
+            return { ...n, status: 'free' as const, owner: undefined, email: undefined, reservedAt: undefined };
+          }
+        }
+        return n;
+      });
+
+      if (changed) {
+        setNumbers(updatedNumbers);
+        await api.updateTickets(raffleId!, updatedNumbers);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [raffleId, numbers]);
 
   const handleSelectNumber = (num: number) => {
     setSelectedNumbers((prev) => 
@@ -92,6 +118,18 @@ export function RafflePage() {
       setInitPoint(mpData.init_point);
       setPixCode(mpData.pix_code);
 
+      // Save reservation to backend
+      await api.savePurchase({
+        raffleId: raffleId!,
+        raffleName: raffle.prizeName,
+        numbers: selectedNumbers,
+        phone,
+        email,
+        totalAmount,
+        status: 'pending',
+        purchaseDate: new Date().toISOString()
+      });
+      
       // Set numbers to reserved locally before opening payment
       const updatedNumbers = [...numbers];
       selectedNumbers.forEach(num => {
@@ -100,11 +138,12 @@ export function RafflePage() {
           target.status = 'reserved';
           target.owner = phone;
           target.email = email;
+          target.reservedAt = new Date().toISOString();
         }
       });
 
       setNumbers(updatedNumbers);
-      localStorage.setItem(`${raffleId}-numbers`, JSON.stringify(updatedNumbers));
+      await api.updateTickets(raffleId!, updatedNumbers);
       
       setBuyerInfo({ phone, email });
       setIsPhoneModalOpen(false);
@@ -116,19 +155,18 @@ export function RafflePage() {
     }
   };
 
-  const handlePaymentConfirmed = () => {
+  const handlePaymentConfirmed = async () => {
     if (!raffle || !buyerInfo) return;
 
-    const updatedNumbers = [...numbers];
-    selectedNumbers.forEach(num => {
-      const target = updatedNumbers.find(n => n.number === num);
-      if (target && target.status === 'reserved' && target.owner === buyerInfo.phone) {
-        target.status = 'paid';
+    const updatedNumbers = numbers.map(target => {
+      if (selectedNumbers.includes(target.number) && target.status === 'reserved' && target.owner === buyerInfo.phone) {
+        return { ...target, status: 'paid' as const };
       }
+      return target;
     });
 
     setNumbers(updatedNumbers);
-    localStorage.setItem(`${raffleId}-numbers`, JSON.stringify(updatedNumbers));
+    await api.updateTickets(raffleId!, updatedNumbers);
     
     // In future: push purchase to /dynamic-action/save-purchase or localStorage 'purchases'
     const purchaseId = Date.now().toString();
@@ -143,9 +181,9 @@ export function RafflePage() {
       purchaseDate: new Date().toISOString()
     };
 
-    const storedPurchases = JSON.parse(localStorage.getItem('purchases') || '[]');
-    storedPurchases.push(purchase);
-    localStorage.setItem('purchases', JSON.stringify(storedPurchases));
+    // No need to save in localStorage purchases since savePurchase was called in handlePhoneSubmit
+    // But we might want to update the status to paid in the DB purchase record too.
+    await api.savePurchase({ ...purchase, status: 'paid' });
 
     toast.success('Pagamento confirmado com sucesso!');
     setIsPaymentModalOpen(false);
@@ -223,25 +261,14 @@ export function RafflePage() {
         <PaymentModal 
           isOpen={isPaymentModalOpen} 
           onOpenChange={(open) => {
-            if (!open && isPaymentModalOpen) {
-              // Modals closed without paying -> revert reserved to free
-              const revertNumbers = [...numbers];
-              selectedNumbers.forEach(n => {
-                const target = revertNumbers.find(rn => rn.number === n);
-                if (target && target.status === 'reserved' && target.owner === buyerInfo.phone) {
-                  target.status = 'free';
-                  delete target.owner;
-                  delete target.email;
-                }
-              });
-              setNumbers(revertNumbers);
-              localStorage.setItem(`${raffleId}-numbers`, JSON.stringify(revertNumbers));
+            if (!open) {
               setSelectedNumbers([]);
-              toast.info('Sua reserva expirou ou foi cancelada.');
+              setBuyerInfo(null);
             }
             setIsPaymentModalOpen(open);
           }} 
           totalAmount={totalAmount} 
+          ticketCount={selectedNumbers.length}
           numbers={selectedNumbers} 
           onPaid={handlePaymentConfirmed} 
           initPoint={initPoint}

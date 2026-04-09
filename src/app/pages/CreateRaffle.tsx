@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ShieldCheck, Upload, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
+
 
 export function CreateRaffle() {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export function CreateRaffle() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -43,19 +45,28 @@ export function CreateRaffle() {
         return;
       }
 
-      const id = `raffle-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const id = `raffle-${Date.now()}`;
       const newRaffle = {
         ...formData,
+        id,
         createdAt: new Date().toISOString()
       };
 
-      localStorage.setItem(id, JSON.stringify(newRaffle));
+      await api.saveRaffle(newRaffle);
+
+      // Initialize tickets for this raffle in the DB
+      const total = parseInt(formData.totalNumbers);
+      const initialTickets = Array.from({ length: total }).map((_, i) => ({
+        number: i,
+        status: 'free'
+      }));
+      await api.updateTickets(id, initialTickets);
       
       toast.success('Rifa criada com sucesso!');
       navigate('/admin/dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erro ao salvar rifa.');
+      toast.error('Erro ao salvar rifa: ' + err.message);
     } finally {
       setLoading(false);
     }

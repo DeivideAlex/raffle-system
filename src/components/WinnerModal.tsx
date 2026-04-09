@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Trophy } from 'lucide-react';
 import { RaffleData, RaffleNumber } from '../app/types';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
+
 
 interface WinnerModalProps {
   isOpen: boolean;
@@ -21,41 +23,61 @@ interface WinnerModalProps {
 export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: WinnerModalProps) {
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedNumber === null) return;
     
-    // Check if number was paid
-    const numbersKey = `${raffle.id}-numbers`;
-    const numbers: RaffleNumber[] = JSON.parse(localStorage.getItem(numbersKey) || '[]');
-    
-    const target = numbers.find(n => n.number === selectedNumber);
-    
-    if (!target || target.status !== 'paid') {
-      toast.error('Apenas números pagos podem ser sorteados!');
-      return;
+    try {
+      // Check if number was paid in DB
+      const numbers: RaffleNumber[] = await api.getTickets(raffle.id!);
+      
+      const target = numbers.find(n => n.number === selectedNumber);
+      
+      if (!target || target.status !== 'paid') {
+        toast.error('Apenas números pagos podem ser sorteados!');
+        return;
+      }
+
+      // Update raffle in DB
+      const updatedRaffle = { ...raffle, winnerNumber: selectedNumber };
+      await api.saveRaffle(updatedRaffle);
+
+      // Add to winners history in DB
+      // Note: This is an additive list. For production, a dedicated table or atomic update is better.
+      // For now we'll fetch existing and append.
+      let winners = [];
+      try {
+        const res = await fetch(`${api.FN_URL}/get-winners`); // I will create this API
+        winners = await res.json();
+      } catch (e) {
+        winners = [];
+      }
+
+      const newWinner = {
+        id: `${raffle.id}-${Date.now()}`,
+        raffleId: raffle.id,
+        raffleName: raffle.prizeName,
+        prizeValue: raffle.prizeValue,
+        winnerNumber: selectedNumber,
+        winnerName: target.owner || 'Sem nome', // Usually phone number
+        date: new Date().toISOString(),
+        prizeImage: raffle.prizeImage
+      };
+      
+      winners.push(newWinner);
+      
+      // I'll create api/save-winners.ts
+      await fetch(`${api.FN_URL}/save-winners`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(winners)
+      });
+
+      toast.success('Ganhador registrado com sucesso!');
+      onWinnerSelected();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error('Erro ao salvar vencedor: ' + e.message);
     }
-
-    // Update raffle
-    const updatedRaffle = { ...raffle, winnerNumber: selectedNumber };
-    localStorage.setItem(raffle.id!, JSON.stringify(updatedRaffle));
-
-    // Add to winners history
-    const winners = JSON.parse(localStorage.getItem('winners') || '[]');
-    winners.push({
-      id: `${raffle.id}-${Date.now()}`,
-      raffleId: raffle.id,
-      raffleName: raffle.prizeName,
-      prizeValue: raffle.prizeValue,
-      winnerNumber: selectedNumber,
-      winnerName: target.owner || 'Sem nome', // Usually phone number
-      date: new Date().toISOString(),
-      prizeImage: raffle.prizeImage
-    });
-    localStorage.setItem('winners', JSON.stringify(winners));
-
-    toast.success('Ganhador registrado com sucesso!');
-    onWinnerSelected();
-    onOpenChange(false);
   };
 
   const totalNumbersArr = Array.from({ length: parseInt(raffle.totalNumbers) || 0 }).map((_, i) => i);

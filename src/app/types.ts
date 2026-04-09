@@ -5,6 +5,7 @@ export interface RaffleNumber {
   status: NumberStatus;
   owner?: string; // Phone number
   email?: string;
+  reservedAt?: string;
 }
 
 export interface RaffleData {

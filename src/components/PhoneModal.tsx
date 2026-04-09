@@ -52,13 +52,13 @@ export function PhoneModal({ isOpen, onOpenChange, onSubmit }: PhoneModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-0 shadow-2xl bg-white/95 backdrop-blur-md">
+      <DialogContent className="sm:max-w-md border-0 shadow-2xl bg-white">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Vamos reservar seus números!
+            Reserva de Números
           </DialogTitle>
-          <DialogDescription className="text-slate-500">
-            Informe seus dados corretamente. Eles serão usados para identificar seus números e entrar em contato caso você ganhe.
+          <DialogDescription className="text-slate-500 font-medium">
+            Seus números ficarão reservados por <span className="text-red-500 font-bold">10 minutos</span>. Informe seu WhatsApp e E-mail para confirmar a reserva e prosseguir.
           </DialogDescription>
         </DialogHeader>
         
