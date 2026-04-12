@@ -34,7 +34,7 @@ export default async function handler(req: any, res: any) {
         installments: 12, // Permitir parcelamento
         default_payment_method_id: "pix" // Sugerir PIX como padrão
       },
-      external_reference: `raffle_${body.raffleId}_${Date.now()}`
+      external_reference: body.purchaseId || `raffle_${body.raffleId}_${Date.now()}`
     };
 
     const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -60,13 +60,14 @@ export default async function handler(req: any, res: any) {
       transaction_amount: body.totalAmount,
       description: `Rifa ${body.raffleName} - ${body.numbers.length} números`,
       payment_method_id: 'pix',
-      notification_url: 'https://raffle-system-chi.vercel.app/api/webhooks', // URL opcional para retorno
+      notification_url: 'https://raffle-system-chi.vercel.app/api/webhooks', // URL para notificações
       payer: {
         email: body.email || 'comprador@exemplo.com',
         first_name: 'Comprador',
         last_name: 'Rifa',
         phone: {
-          number: body.phone
+          area_code: '55',
+          number: body.phone.replace(/\D/g, '').slice(-9)
         }
       },
       external_reference: preferenceData.external_reference
@@ -97,7 +98,8 @@ export default async function handler(req: any, res: any) {
       pix_code: mpData.point_of_interaction.transaction_data.qr_code,
       qr_code_64: mpData.point_of_interaction.transaction_data.qr_code_base64,
       init_point: prefData.init_point,
-      paymentId: mpData.id
+      paymentId: mpData.id,
+      external_reference: preferenceData.external_reference
     });
 
   } catch (error: any) {

@@ -4,6 +4,7 @@ import { Card, CardContent } from './ui/card';
 import { TopBar } from './TopBar';
 import { Ticket, Trophy, DollarSign } from 'lucide-react';
 import { ClientLoginModal } from './ClientLoginModal';
+import { api } from '@/lib/api';
 
 export function MyNumbers() {
   const [isLoginOpen, setIsLoginOpen] = useState(true);
@@ -14,16 +15,29 @@ export function MyNumbers() {
   useEffect(() => {
     if (!credentials) return;
 
-    // Load from local storage mocks
-    const storedPurchases: Purchase[] = JSON.parse(localStorage.getItem('purchases') || '[]');
-    const userPurchases = storedPurchases.filter(p => p.phone === credentials.phone && p.email === credentials.email);
+    const fetchData = async () => {
+      try {
+        const userPurchases = await api.getMyPurchases(credentials.phone);
+        // Filtrar por email também se necessário (já feito no backend opcionalmente)
+        const filtered = userPurchases.filter(p => !credentials.email || p.email === credentials.email);
 
-    const enriched = userPurchases.map(p => {
-      const raffleData = JSON.parse(localStorage.getItem(p.raffleId) || 'null');
-      return { ...p, raffle: raffleData };
-    });
+        const enriched = await Promise.all(filtered.map(async p => {
+          try {
+            const raffleData = await api.getRaffle(p.raffleId);
+            return { ...p, raffle: raffleData };
+          } catch (e) {
+            console.error('Erro ao carregar rifa:', p.raffleId, e);
+            return p;
+          }
+        }));
 
-    setMyPurchases(enriched.sort((a,b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()));
+        setMyPurchases(enriched.sort((a,b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime()));
+      } catch (e: any) {
+        console.error('Erro ao buscar compras:', e);
+      }
+    };
+
+    fetchData();
   }, [credentials]);
 
   const handleLogin = (phone: string, email: string) => {

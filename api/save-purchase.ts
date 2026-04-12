@@ -16,6 +16,7 @@ export default async function handler(req: Request) {
     const normalizedPhone = body.phone.replace(/\D/g, '');
     const purchaseId = `purchase:${normalizedPhone}:${Date.now()}`;
     body.phone = normalizedPhone;
+    body.id = purchaseId;
     
     const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     // Tenta usar a chave de serviço ou a anônima

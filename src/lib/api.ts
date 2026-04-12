@@ -1,7 +1,7 @@
 import { Purchase } from '@/app/types';
 
 const SUPABASE_URL = "https://ggafunjazgsxxjkbmiwv.supabase.co";
-export const FN_URL = `${SUPABASE_URL}/functions/v1/dynamic-action`;
+export const FN_URL = '/api';
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
@@ -19,6 +19,7 @@ export const api = {
     phone: string;
     email: string;
     totalAmount: number;
+    purchaseId?: string;
   }) => {
     const res = await fetch(`${FN_URL}/create-payment`, {
       method: 'POST',

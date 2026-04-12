@@ -122,7 +122,7 @@ export function RafflePage() {
       await api.updateTickets(raffleId!, updatedNumbers);
 
       // 2. Save reservation/purchase record to DB
-      await api.savePurchase({
+      const purchaseRes = await api.savePurchase({
         raffleId: raffleId!,
         raffleName: raffle.prizeName,
         numbers: selectedNumbers,
@@ -132,6 +132,8 @@ export function RafflePage() {
         status: 'pending',
         purchaseDate: new Date().toISOString()
       });
+
+      const purchaseId = purchaseRes.id;
 
       setBuyerInfo({ phone, email });
       setIsPhoneModalOpen(false);
@@ -145,7 +147,8 @@ export function RafflePage() {
           numbers: selectedNumbers,
           phone,
           email,
-          totalAmount
+          totalAmount,
+          purchaseId
         });
         
         setInitPoint(mpData.init_point);
@@ -192,10 +195,15 @@ export function RafflePage() {
     // But we might want to update the status to paid in the DB purchase record too.
     await api.savePurchase({ ...purchase, status: 'paid' });
 
-    toast.success('Pagamento confirmado com sucesso!');
+    toast.success('Pagamento carregado! Redirecionando...');
     setIsPaymentModalOpen(false);
     setSelectedNumbers([]);
     setBuyerInfo(null);
+    
+    // Automatic redirect to home after 2 seconds
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
   };
 
   if (!raffle) return null;

@@ -70,6 +70,7 @@ export function PaymentModal({
           if (data.status === 'approved') {
             setIsApproved(true);
             toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
+            onPaid();
             clearInterval(interval);
           }
         } catch (error) {
