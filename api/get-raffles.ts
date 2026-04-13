@@ -15,10 +15,13 @@ export default async function handler(req: Request) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseKey) {
-        throw new Error('Supabase key not configured in Vercel Environment Variables');
+        return new Response(JSON.stringify({ 
+          error: 'SUPABASE_ANON_KEY ou SUPABASE_SERVICE_ROLE_KEY não configurada na Vercel.',
+          hint: 'Adicione as chaves no painel da Vercel (Settings > Environment Variables) para conectar ao banco.' 
+        }), { status: 500, headers: corsHeaders });
     }
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=like.raffle:*`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=like.raffle:%`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey,

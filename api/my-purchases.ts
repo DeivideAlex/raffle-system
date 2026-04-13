@@ -30,7 +30,7 @@ export default async function handler(req: Request) {
     // Buscar por chave (telefone) OU por dentro do JSON (email)
     const query = search.includes('@') 
       ? `value->>email=eq.${search}` 
-      : `key=like.purchase:${normalizedSearch}:*`;
+      : `key=like.purchase:${normalizedSearch}:%`;
 
     const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&${query}`, {
       method: 'GET',
