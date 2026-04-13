@@ -9,9 +9,10 @@ interface PrizeHeaderProps {
   ticketPrice: string;
   image: string;
   endDate: string;
+  type?: 'numbers' | 'animals';
 }
 
-export function PrizeHeader({ name, value, description, ticketPrice, image, endDate }: PrizeHeaderProps) {
+export function PrizeHeader({ name, value, description, ticketPrice, image, endDate, type }: PrizeHeaderProps) {
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Link copiado para a área de transferência!');
@@ -49,7 +50,7 @@ export function PrizeHeader({ name, value, description, ticketPrice, image, endD
         <div className="flex flex-wrap gap-2 mb-3">
           <span className="inline-flex flex-row items-center bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
             <Tag className="w-3 h-3 mr-1" />
-            Por Número: R$ {parseFloat(ticketPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            {type === 'animals' ? 'Por Grupo' : 'Por Número'}: R$ {parseFloat(ticketPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
           </span>
         </div>
 

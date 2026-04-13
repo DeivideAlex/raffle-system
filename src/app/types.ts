@@ -19,6 +19,7 @@ export interface RaffleData {
   endDate: string;
   createdAt: string;
   winnerNumber?: number;
+  type?: 'numbers' | 'animals';
 }
 
 export interface Winner {

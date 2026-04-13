@@ -20,7 +20,8 @@ export function CreateRaffle() {
     ticketPrice: '',
     totalNumbers: '100',
     prizeImage: '',
-    endDate: ''
+    endDate: '',
+    type: 'numbers' as 'numbers' | 'animals'
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,9 +126,30 @@ export function CreateRaffle() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="prizeDescription">Descrição Detalhada</Label>
-                  <Input id="prizeDescription" value={formData.prizeDescription} onChange={e => setFormData({...formData, prizeDescription: e.target.value})} placeholder="Insira os detalhes e as regras" className="h-12"/>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="raffleType">Tipo de Rifa</Label>
+                    <select 
+                      id="raffleType" 
+                      value={formData.type} 
+                      onChange={e => {
+                        const type = e.target.value as 'numbers' | 'animals';
+                        setFormData({
+                          ...formData, 
+                          type,
+                          totalNumbers: type === 'animals' ? '100' : formData.totalNumbers
+                        });
+                      }} 
+                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    >
+                      <option value="numbers">Números Individuais</option>
+                      <option value="animals">Grupo (Animais - Jogo do Bicho)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="prizeDescription">Descrição Detalhada</Label>
+                    <Input id="prizeDescription" value={formData.prizeDescription} onChange={e => setFormData({...formData, prizeDescription: e.target.value})} placeholder="Insira os detalhes e as regras" className="h-12"/>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -137,7 +159,13 @@ export function CreateRaffle() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="totalNumbers">Qtd. de Números *</Label>
-                    <select id="totalNumbers" value={formData.totalNumbers} onChange={e => setFormData({...formData, totalNumbers: e.target.value})} className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50">
+                    <select 
+                      id="totalNumbers" 
+                      value={formData.totalNumbers} 
+                      disabled={formData.type === 'animals'}
+                      onChange={e => setFormData({...formData, totalNumbers: e.target.value})} 
+                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                       <option value="10">10 números</option>
                       <option value="25">25 números</option>
                       <option value="50">50 números</option>

@@ -4,6 +4,7 @@ import { TopBar } from '@/components/TopBar';
 import { PrizeHeader } from '@/components/PrizeHeader';
 import { StatusSummary } from '@/components/StatusSummary';
 import { NumberGrid } from '@/components/NumberGrid';
+import { AnimalGrid } from '@/components/AnimalGrid';
 import { FloatingCart } from '@/components/FloatingCart';
 import { PhoneModal } from '@/components/PhoneModal';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -227,6 +228,7 @@ export function RafflePage() {
           ticketPrice={raffle.ticketPrice}
           image={raffle.prizeImage}
           endDate={raffle.endDate}
+          type={raffle.type}
         />
 
         <StatusSummary free={freeCount} reserved={reservedCount} paid={paidCount} />
@@ -248,12 +250,28 @@ export function RafflePage() {
             </span>
           </div>
 
-          <NumberGrid 
-            numbers={numbers} 
-            selectedNumbers={selectedNumbers} 
-            onSelectNumber={handleSelectNumber} 
-            winnerNumber={raffle.winnerNumber}
-          />
+          {raffle.type === 'animals' ? (
+            <AnimalGrid 
+              numbers={numbers} 
+              selectedNumbers={selectedNumbers} 
+              onSelectAnimal={(animalNums) => {
+                // Se o primeiro número já estiver selecionado, remove todos
+                if (selectedNumbers.includes(animalNums[0])) {
+                  setSelectedNumbers(prev => prev.filter(n => !animalNums.includes(n)));
+                } else {
+                  setSelectedNumbers(prev => [...prev, ...animalNums]);
+                }
+              }} 
+              winnerNumber={raffle.winnerNumber}
+            />
+          ) : (
+            <NumberGrid 
+              numbers={numbers} 
+              selectedNumbers={selectedNumbers} 
+              onSelectNumber={handleSelectNumber} 
+              winnerNumber={raffle.winnerNumber}
+            />
+          )}
         </div>
       </main>
 
