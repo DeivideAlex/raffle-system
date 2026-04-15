@@ -15,7 +15,8 @@ export default async function handler(req: Request) {
     const raffleId = url.searchParams.get('raffleId');
     if (!raffleId) throw new Error('raffleId is required');
 
-    const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseKey) {

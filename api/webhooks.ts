@@ -7,7 +7,8 @@ export default async function handler(req: any, res: any) {
   try {
     const { action, data, type } = req.body;
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     // O Mercado Pago envia várias notificações. Só nos interessa quando um pagamento é criado/atualizado.

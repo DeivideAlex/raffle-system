@@ -14,7 +14,8 @@ export default async function handler(req: Request) {
     const body = await req.json();
     const raffleId = body.id || `raffle-${Date.now()}`;
     
-    const supabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseKey) {
