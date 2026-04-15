@@ -41,36 +41,18 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
       const updatedRaffle = { ...raffle, winnerNumber: selectedNumber };
       await api.saveRaffle(updatedRaffle);
 
-      // Add to winners history in DB
-      // Note: This is an additive list. For production, a dedicated table or atomic update is better.
-      // For now we'll fetch existing and append.
-      let winners = [];
-      try {
-        const res = await fetch(`${api.FN_URL}/get-winners`); // I will create this API
-        winners = await res.json();
-      } catch (e) {
-        winners = [];
-      }
-
+      // Add winner to the 'winners' table (single insert)
       const newWinner = {
-        id: `${raffle.id}-${Date.now()}`,
         raffleId: raffle.id,
         raffleName: raffle.prizeName,
         prizeValue: raffle.prizeValue,
         winnerNumber: selectedNumber,
-        winnerName: target.owner || 'Sem nome', // Usually phone number
+        winnerName: target.owner || 'Sem nome',
         date: new Date().toISOString(),
         prizeImage: raffle.prizeImage
       };
       
-      winners.push(newWinner);
-      
-      // I'll create api/save-winners.ts
-      await fetch(`${api.FN_URL}/save-winners`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(winners)
-      });
+      await api.saveWinners([newWinner]);
 
       toast.success('Ganhador registrado com sucesso!');
       onWinnerSelected();

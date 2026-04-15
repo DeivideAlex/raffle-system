@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS raffles (
   "endDate" TIMESTAMPTZ NOT NULL,
   "winnerNumber" INTEGER,
   status TEXT DEFAULT 'active',
+  type TEXT DEFAULT 'numbers',
   "createdAt" TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -60,3 +61,9 @@ ALTER TABLE raffles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE tickets DISABLE ROW LEVEL SECURITY;
 ALTER TABLE purchases DISABLE ROW LEVEL SECURITY;
 ALTER TABLE winners DISABLE ROW LEVEL SECURITY;
+
+-- Adicionar coluna type se não existir (para rifas existentes)
+DO $$ BEGIN
+  ALTER TABLE raffles ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'numbers';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
