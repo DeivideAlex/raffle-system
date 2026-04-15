@@ -41,7 +41,15 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
       const updatedRaffle = { ...raffle, winnerNumber: selectedNumber };
       await api.saveRaffle(updatedRaffle);
 
-      // Add winner to the 'winners' table (single insert)
+      // Add to winners history in DB
+      let winners = [];
+      try {
+        winners = await api.getWinners();
+        if (!Array.isArray(winners)) winners = [];
+      } catch (e) {
+        winners = [];
+      }
+
       const newWinner = {
         raffleId: raffle.id,
         raffleName: raffle.prizeName,
@@ -52,7 +60,8 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
         prizeImage: raffle.prizeImage
       };
       
-      await api.saveWinners([newWinner]);
+      winners.push(newWinner);
+      await api.saveWinners(winners);
 
       toast.success('Ganhador registrado com sucesso!');
       onWinnerSelected();

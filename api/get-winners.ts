@@ -15,12 +15,7 @@ export default async function handler(req: Request) {
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseKey) {
-      throw new Error('Supabase key not configured in Vercel Environment Variables');
-    }
-
-    // Query the 'winners' table
-    const res = await fetch(`${supabaseUrl}/rest/v1/winners?select=*&order=date.desc`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=eq.winners_history`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey,
@@ -30,13 +25,12 @@ export default async function handler(req: Request) {
     });
     
     if (!res.ok) {
-      const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { 
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+        const err = await res.text();
+       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    const winners = await res.json();
+    const data = await res.json();
+    const winners = data.length > 0 ? data[0].value : [];
 
     return new Response(JSON.stringify(winners), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

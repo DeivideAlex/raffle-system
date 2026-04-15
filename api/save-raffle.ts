@@ -12,34 +12,19 @@ export default async function handler(req: Request) {
 
   try {
     const body = await req.json();
-    const raffleId = body.id || `raffle-${Date.now()}`;
+    const raffleId = body.id || `raffle:${Date.now()}`;
+    const key = `raffle:${raffleId.replace('raffle:', '')}`;
     
     const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseKey) {
-      throw new Error('Supabase key not configured in Vercel Environment Variables');
+        throw new Error('Supabase key not configured');
     }
 
-    // Map frontend fields to the 'raffles' table columns
-    const row = {
-      id: raffleId,
-      "prizeName": body.prizeName,
-      "prizeValue": body.prizeValue,
-      "prizeDescription": body.prizeDescription || '',
-      "ticketPrice": parseFloat(body.ticketPrice) || 0,
-      "totalNumbers": parseInt(body.totalNumbers) || 100,
-      "prizeImage": body.prizeImage || '',
-      "endDate": body.endDate,
-      "winnerNumber": body.winnerNumber ?? null,
-      status: body.status || 'active',
-      type: body.type || 'numbers',
-      "createdAt": body.createdAt || new Date().toISOString(),
-    };
-
-    // Upsert into the 'raffles' table
-    const res = await fetch(`${supabaseUrl}/rest/v1/raffles`, {
+    // Salva o objeto inteiro na coluna 'value' (comportamento original)
+    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c`, {
       method: 'POST',
       headers: {
         'apikey': supabaseKey,
@@ -47,17 +32,15 @@ export default async function handler(req: Request) {
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates'
       },
-      body: JSON.stringify(row)
+      body: JSON.stringify({ key, value: { ...body, id: key } })
     });
     
     if (!res.ok) {
-      const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { 
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+        const err = await res.text();
+       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    return new Response(JSON.stringify({ success: true, id: raffleId }), {
+    return new Response(JSON.stringify({ success: true, id: key }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {

@@ -11,65 +11,72 @@ export default async function handler(req: any, res: any) {
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    // O Mercado Pago envia várias notificações. Só nos interessa quando um pagamento é criado/atualizado.
     if (action === 'payment.created' || action === 'payment.updated' || req.query.topic === 'payment' || type === 'payment') {
       const paymentId = data?.id || req.query.id || req.body.data?.id;
-      
       if (!paymentId) return res.status(200).send('OK');
 
-      // Buscar detalhes do pagamento no Mercado Pago
       const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!mpResponse.ok) return res.status(200).send('OK');
-
       const payment = await mpResponse.json();
 
-      // Se o status for 'approved', damos baixa no nosso banco
       if (payment.status === 'approved') {
         const purchaseId = payment.external_reference; 
         
-        console.log(`PAGAMENTO APROVADO: ${purchaseId} para o pagamento ${paymentId}`);
-
-        if (purchaseId) {
-          // 1. Buscar a compra na tabela 'purchases'
-          const purchaseRes = await fetch(`${supabaseUrl}/rest/v1/purchases?id=eq.${encodeURIComponent(purchaseId)}&select=*`, {
+        if (purchaseId && purchaseId.startsWith('purchase:')) {
+          const purchaseRes = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=eq.${purchaseId}`, {
             headers: { 'apikey': supabaseKey!, 'Authorization': `Bearer ${supabaseKey}` }
           });
           
           const purchaseData = await purchaseRes.json();
           if (purchaseData && purchaseData.length > 0) {
-            const purchase = purchaseData[0];
+            const purchase = purchaseData[0].value;
+            purchase.status = 'paid';
             
-            // 2. Atualizar status da compra para 'paid'
-            await fetch(`${supabaseUrl}/rest/v1/purchases?id=eq.${encodeURIComponent(purchaseId)}`, {
-              method: 'PATCH',
+            await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c`, {
+              method: 'POST',
               headers: { 
                 'apikey': supabaseKey!, 
                 'Authorization': `Bearer ${supabaseKey}`, 
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
               },
-              body: JSON.stringify({ status: 'paid' })
+              body: JSON.stringify({ key: purchaseId, value: purchase })
             });
 
-            // 3. Atualizar os tickets da rifa para 'paid'
             const raffleId = purchase.raffleId;
-            const numbers: number[] = purchase.numbers;
+            const ticketKey = raffleId.startsWith('tickets:') ? raffleId : `tickets:${raffleId.replace('raffle:', '')}`;
             
-            // Update each reserved ticket to paid
-            for (const num of numbers) {
-              await fetch(`${supabaseUrl}/rest/v1/tickets?raffleId=eq.${encodeURIComponent(raffleId)}&number=eq.${num}&status=eq.reserved`, {
-                method: 'PATCH',
-                headers: { 
-                  'apikey': supabaseKey!, 
-                  'Authorization': `Bearer ${supabaseKey}`, 
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: 'paid' })
+            const ticketsRes = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=eq.${ticketKey}`, {
+              headers: { 'apikey': supabaseKey!, 'Authorization': `Bearer ${supabaseKey}` }
+            });
+            const ticketsData = await ticketsRes.json();
+            
+            if (ticketsData && ticketsData.length > 0) {
+              let tickets = ticketsData[0].value;
+              let changed = false;
+              tickets = tickets.map((t: any) => {
+                if (purchase.numbers.includes(t.number) && t.status === 'reserved') {
+                  changed = true;
+                  return { ...t, status: 'paid' };
+                }
+                return t;
               });
+
+              if (changed) {
+                await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c`, {
+                  method: 'POST',
+                  headers: { 
+                    'apikey': supabaseKey!, 
+                    'Authorization': `Bearer ${supabaseKey}`, 
+                    'Content-Type': 'application/json',
+                    'Prefer': 'resolution=merge-duplicates'
+                  },
+                  body: JSON.stringify({ key: ticketKey, value: tickets })
+                });
+              }
             }
           }
         }

@@ -13,26 +13,19 @@ export default async function handler(req: Request) {
   try {
     const url = new URL(req.url);
     const search = url.searchParams.get('phone') || url.searchParams.get('email');
-    if (!search) throw new Error('Termo de busca (telefone ou email) é obrigatório');
+    if (!search) throw new Error('Termo de busca é obrigatório');
+    
+    const normalizedSearch = search.replace(/\D/g, ''); 
     
     const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseKey) {
-      throw new Error('Supabase key not configured in Vercel Environment Variables');
-    }
+    const query = search.includes('@') 
+      ? `value->>email=eq.${search}` 
+      : `key=like.purchase:${normalizedSearch}:%25`;
 
-    // Search by phone or email in the 'purchases' table
-    let query: string;
-    if (search.includes('@')) {
-      query = `email=eq.${encodeURIComponent(search)}`;
-    } else {
-      const normalizedPhone = search.replace(/\D/g, '');
-      query = `phone=eq.${encodeURIComponent(normalizedPhone)}`;
-    }
-
-    const res = await fetch(`${supabaseUrl}/rest/v1/purchases?${query}&select=*&order=purchaseDate.desc`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&${query}`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey,
@@ -42,13 +35,12 @@ export default async function handler(req: Request) {
     });
     
     if (!res.ok) {
-      const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { 
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+        const err = await res.text();
+       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    const records = await res.json();
+    const data = await res.json();
+    const records = data.map((d: any) => d.value);
 
     return new Response(JSON.stringify(records), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
