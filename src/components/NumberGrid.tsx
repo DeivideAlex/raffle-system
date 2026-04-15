@@ -16,20 +16,20 @@ export function NumberGrid({ numbers, selectedNumbers, onSelectNumber, winnerNum
         const isSelected = selectedNumbers.includes(item.number);
         const isWinner = winnerNumber === item.number;
         
-        let bgColor = 'bg-green-500 hover:bg-green-600 text-white cursor-pointer'; // Free
+        let bgColor = 'bg-[#00c853] hover:bg-[#00e676] text-white cursor-pointer'; // Free
         
         if (item.status === 'reserved') {
-          bgColor = 'bg-yellow-500 text-white cursor-not-allowed opacity-80';
+          bgColor = 'bg-[#f5a623] text-[#0a1128] cursor-not-allowed opacity-80';
         } else if (item.status === 'paid') {
-          bgColor = 'bg-blue-500 text-white cursor-not-allowed opacity-80';
+          bgColor = 'bg-[#1e88e5] text-white cursor-not-allowed opacity-80';
         }
 
         if (isWinner) {
-          bgColor = 'bg-yellow-400 text-black border-4 border-yellow-600 animate-pulse font-bold scale-110 z-10';
+          bgColor = 'bg-[#ffd700] text-[#0a1128] border-4 border-[#f5a623] animate-pulse font-bold scale-110 z-10';
         }
 
         if (item.status === 'free' && isSelected) {
-          bgColor = 'bg-purple-600 border-2 border-purple-300 text-white scale-105 shadow-md z-10';
+          bgColor = 'bg-[#f5a623] border-2 border-[#ffd700] text-[#0a1128] scale-105 shadow-md shadow-[#f5a623]/30 z-10';
         }
 
         return (

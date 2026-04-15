@@ -217,7 +217,7 @@ export function RafflePage() {
   const isEnded = new Date(raffle.endDate) < new Date() || (raffle.winnerNumber !== null && raffle.winnerNumber !== undefined);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 pb-32">
+    <div className="min-h-screen bg-[#0a1128] pb-32">
       <TopBar />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
@@ -234,18 +234,18 @@ export function RafflePage() {
         <StatusSummary free={freeCount} reserved={reservedCount} paid={paidCount} />
 
         {(raffle.winnerNumber !== null && raffle.winnerNumber !== undefined) && (
-          <div className="mt-8 bg-yellow-400 p-6 rounded-2xl shadow-xl border-4 border-yellow-500 text-center animate-pulse">
-            <h2 className="text-3xl font-black text-yellow-900 mb-2">🎉 TEMOS UM GANHADOR! 🎉</h2>
-            <p className="text-xl font-bold text-yellow-800">
+          <div className="mt-8 bg-gradient-to-r from-[#f5a623] to-[#ffd700] p-6 rounded-2xl shadow-xl shadow-[#f5a623]/20 border-4 border-[#ffd700] text-center animate-pulse">
+            <h2 className="text-3xl font-black text-[#0a1128] mb-2">🎉 TEMOS UM GANHADOR! 🎉</h2>
+            <p className="text-xl font-bold text-[#0a1128]/80">
               O número premiado foi o <span className="bg-white px-3 py-1 rounded-lg ml-2">{String(raffle.winnerNumber).padStart(2, '0')}</span>
             </p>
           </div>
         )}
 
-        <div className="mt-12 bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-white">
+        <div className="mt-12 bg-[#111d3a] rounded-3xl p-6 md:p-8 shadow-xl border border-[#2a3a5c]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-slate-800">Escolha seus números</h2>
-            <span className="text-sm font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+            <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Escolha seus números</h2>
+            <span className="text-sm font-semibold text-[#8899bb] bg-[#0a1128] px-3 py-1 rounded-full border border-[#2a3a5c]">
               {raffle.totalNumbers} números no total
             </span>
           </div>

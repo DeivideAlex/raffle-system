@@ -52,45 +52,45 @@ export function PhoneModal({ isOpen, onOpenChange, onSubmit }: PhoneModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-0 shadow-2xl bg-white">
+      <DialogContent className="sm:max-w-md border border-[#2a3a5c] shadow-2xl bg-[#111d3a]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold gold-shimmer">
             Reserva de Números
           </DialogTitle>
-          <DialogDescription className="text-slate-500 font-medium">
-            Seus números ficarão reservados por <span className="text-red-500 font-bold">10 minutos</span>. Informe seu WhatsApp e E-mail para confirmar a reserva e prosseguir.
+          <DialogDescription className="text-[#8899bb] font-medium">
+            Seus números ficarão reservados por <span className="text-[#f5a623] font-bold">10 minutos</span>. Informe seu WhatsApp e E-mail para confirmar a reserva e prosseguir.
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefone (WhatsApp)</Label>
+            <Label htmlFor="phone" className="text-[#8899bb]">Telefone (WhatsApp)</Label>
             <Input
               id="phone"
               placeholder="(11) 99999-9999"
               value={phone}
               onChange={handleChangePhone}
-              className="text-lg bg-slate-50 border-slate-200"
+              className="text-lg bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
               required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email" className="text-[#8899bb]">E-mail</Label>
             <Input
               id="email"
               type="email"
               placeholder="seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="text-lg bg-slate-50 border-slate-200"
+              className="text-lg bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
               required
             />
           </div>
 
           <Button 
             type="submit" 
-            className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-bold"
+            className="w-full h-12 bg-gradient-to-r from-[#f5a623] to-[#e8941a] hover:from-[#e8941a] hover:to-[#d4810f] text-[#0a1128] font-bold"
             disabled={!isValida}
           >
             Continuar para Pagamento

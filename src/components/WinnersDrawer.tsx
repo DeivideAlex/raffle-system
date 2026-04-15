@@ -36,42 +36,42 @@ export function WinnersDrawer({ isOpen, onOpenChange }: WinnersDrawerProps) {
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85vh]">
+      <DrawerContent className="h-[85vh] bg-[#0a1128] border-t border-[#2a3a5c]">
         <div className="mx-auto w-full max-w-lg h-full flex flex-col">
-          <DrawerHeader className="border-b border-slate-100">
-            <DrawerTitle className="text-2xl font-black text-slate-800 flex items-center justify-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-500" />
-              Galeria de Ganhadores
+          <DrawerHeader className="border-b border-[#2a3a5c]">
+            <DrawerTitle className="text-2xl font-black text-white flex items-center justify-center gap-2">
+              <Trophy className="w-6 h-6 text-[#ffd700]" />
+              <span className="gold-shimmer">Galeria de Ganhadores</span>
             </DrawerTitle>
-            <DrawerDescription className="text-center">
+            <DrawerDescription className="text-center text-[#8899bb]">
               Histórico de todos os sortudos do nosso sistema.
             </DrawerDescription>
           </DrawerHeader>
 
           <ScrollArea className="flex-1 p-4">
             {winners.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-[#5a6a8a]">
                 <Trophy className="w-12 h-12 mx-auto mb-2 opacity-20" />
                 Nenhum sorteio foi finalizado ainda.
               </div>
             ) : (
               <div className="space-y-4 pb-8">
                 {winners.map((w) => (
-                  <div key={w.id} className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex gap-4 items-center">
+                  <div key={w.id} className="bg-[#111d3a] border border-[#f5a623]/20 rounded-2xl p-4 flex gap-4 items-center">
                     <img 
                       src={w.prizeImage || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48'} 
                       alt="Prêmio" 
-                      className="w-16 h-16 rounded-xl object-cover shadow-sm bg-white"
+                      className="w-16 h-16 rounded-xl object-cover shadow-sm bg-[#0a1128]"
                     />
                     <div className="flex-1">
-                      <h4 className="font-bold text-slate-800 line-clamp-1">{w.raffleName}</h4>
-                      <div className="flex text-xs text-slate-500 items-center mt-1">
+                      <h4 className="font-bold text-white line-clamp-1">{w.raffleName}</h4>
+                      <div className="flex text-xs text-[#8899bb] items-center mt-1">
                         <Calendar className="w-3 h-3 mr-1" />
                         {new Date(w.date).toLocaleDateString('pt-BR')}
                       </div>
-                      <p className="text-sm font-semibold text-slate-700 mt-1">Ganhador: {w.winnerName}</p>
+                      <p className="text-sm font-semibold text-[#f5a623] mt-1">Ganhador: {w.winnerName}</p>
                     </div>
-                    <div className="bg-yellow-400 text-yellow-900 font-black text-xl w-14 h-14 rounded-full flex items-center justify-center border-2 border-yellow-500 shadow-md">
+                    <div className="bg-gradient-to-br from-[#ffd700] to-[#f5a623] text-[#0a1128] font-black text-xl w-14 h-14 rounded-full flex items-center justify-center border-2 border-[#ffd700] shadow-md">
                       {String(w.winnerNumber).padStart(2, '0')}
                     </div>
                   </div>

@@ -1,33 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  --background: #f8fafc; /* hsl(210 40% 98%) */
-  --foreground: #0f172a; /* hsl(222.2 84% 4.9%) */
+  --background: #0a1128;
+  --foreground: #f0f0f0;
   
-  --card: #ffffff; /* hsl(0 0% 100%) */
-  --card-foreground: #0f172a;
+  --card: #111d3a;
+  --card-foreground: #f0f0f0;
   
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover: #111d3a;
+  --popover-foreground: #f0f0f0;
   
-  --primary: #9333ea; /* from-purple-600 */
-  --primary-foreground: #f8fafc;
+  --primary: #f5a623; /* Gold/Orange - NAI Premiações brand */
+  --primary-foreground: #0a1128;
   
-  --secondary: #f1f5f9;
-  --secondary-foreground: #1e293b;
+  --secondary: #1a2744;
+  --secondary-foreground: #f0f0f0;
   
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted: #1a2744;
+  --muted-foreground: #8899bb;
   
-  --accent: #f1f5f9;
-  --accent-foreground: #1e293b;
+  --accent: #1e88e5; /* Blue accent */
+  --accent-foreground: #ffffff;
   
-  --destructive: #ef4444; /* hsl(0 84.2% 60.2%) */
+  --destructive: #ef4444;
   --destructive-foreground: #f8fafc;
   
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #9333ea;
+  --border: #2a3a5c;
+  --input: #2a3a5c;
+  --ring: #f5a623;
   
   --radius: 0.5rem;
+  
+  /* NAI Custom Colors */
+  --nai-navy-dark: #0a1128;
+  --nai-navy: #111d3a;
+  --nai-navy-light: #1a2744;
+  --nai-gold: #f5a623;
+  --nai-gold-bright: #ffd700;
+  --nai-orange: #e8941a;
+  --nai-blue: #1e88e5;
+  --nai-green: #00c853;
 }

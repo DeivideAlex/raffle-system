@@ -72,17 +72,17 @@ export function MyNumbersModal({ isOpen, onOpenChange }: MyNumbersModalProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[450px] bg-white border-0 shadow-2xl p-0 overflow-hidden">
-          <div className="bg-white p-6 md:p-8 flex flex-col gap-4">
+        <DialogContent className="sm:max-w-[450px] bg-[#111d3a] border border-[#2a3a5c] shadow-2xl p-0 overflow-hidden">
+          <div className="p-6 md:p-8 flex flex-col gap-4">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-slate-800">
+              <DialogTitle className="text-2xl font-black text-white">
                 Meus Números
               </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col gap-4">
-              <p className="text-sm text-slate-500">
-                Digite o <b>Telefone</b> ou <b>E-mail</b> usado na compra para consultar seus bilhetes.
+              <p className="text-sm text-[#8899bb]">
+                Digite o <b className="text-[#f5a623]">Telefone</b> ou <b className="text-[#f5a623]">E-mail</b> usado na compra para consultar seus bilhetes.
               </p>
               
               <div className="flex gap-2">
@@ -90,34 +90,34 @@ export function MyNumbersModal({ isOpen, onOpenChange }: MyNumbersModalProps) {
                   placeholder="Seu telefone ou e-mail" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-slate-50 border-slate-200"
+                  className="flex-1 bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
                 />
-                <Button onClick={handleSearch} disabled={loading} className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={handleSearch} disabled={loading} className="bg-[#f5a623] hover:bg-[#e8941a] text-[#0a1128]">
                   <Search className="w-4 h-4" />
                 </Button>
               </div>
 
               <div className="max-h-[350px] overflow-y-auto flex flex-col gap-3 mt-2 pr-1 custom-scrollbar">
                 {purchases.map((p, i) => (
-                  <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-2">
+                  <div key={i} className="bg-[#0a1128] border border-[#2a3a5c] rounded-xl p-4 flex flex-col gap-2">
                     <div className="flex justify-between items-center">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">PEDIDO #{p.id.slice(-6)}</span>
-                        <span className="text-[10px] font-medium text-slate-400">{p.raffleName}</span>
+                        <span className="text-[10px] font-bold text-[#5a6a8a] uppercase tracking-tight">PEDIDO #{p.id.slice(-6)}</span>
+                        <span className="text-[10px] font-medium text-[#8899bb]">{p.raffleName}</span>
                       </div>
                       {p.status === 'paid' ? (
-                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="bg-[#00c853]/15 text-[#00c853] text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-[#00c853]/30">
                           <CheckCircle className="w-3 h-3" /> PAGO
                         </span>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="bg-[#f5a623]/15 text-[#f5a623] text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-[#f5a623]/30">
                             <Clock className="w-3 h-3" /> RESERVADO
                           </span>
                           <Button 
                             variant="secondary" 
                             size="sm" 
-                            className="h-7 px-3 text-[10px] font-bold bg-blue-600 text-white hover:bg-blue-700" 
+                            className="h-7 px-3 text-[10px] font-bold bg-[#1e88e5] text-white hover:bg-[#1976d2]" 
                             onClick={() => handlePay(p)} 
                             disabled={loadingPayment}
                           >
@@ -129,7 +129,7 @@ export function MyNumbersModal({ isOpen, onOpenChange }: MyNumbersModalProps) {
                     
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {p.numbers.map((n: number) => (
-                        <span key={n} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm ${p.status === 'paid' ? 'bg-green-600 text-white' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <span key={n} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm ${p.status === 'paid' ? 'bg-[#00c853] text-white' : 'bg-[#111d3a] text-[#8899bb] border border-[#2a3a5c]'}`}>
                           {String(n).padStart(2, '0')}
                         </span>
                       ))}
@@ -138,7 +138,7 @@ export function MyNumbersModal({ isOpen, onOpenChange }: MyNumbersModalProps) {
                 ))}
                 
                 {purchases.length === 0 && !loading && (
-                  <div className="text-center py-8 text-slate-400">
+                  <div className="text-center py-8 text-[#5a6a8a]">
                     <ReceiptText className="w-12 h-12 mx-auto mb-2 opacity-20" />
                     <p className="text-sm font-medium">Nenhum resultado para exibir</p>
                   </div>

@@ -9,22 +9,22 @@ interface StatusSummaryProps {
 export function StatusSummary({ free, reserved, paid }: StatusSummaryProps) {
   return (
     <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6">
-      <div className="flex flex-col items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-        <CircleDot className="w-6 h-6 text-green-500 mb-1" />
-        <span className="text-2xl font-bold text-slate-800">{free}</span>
-        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Livres</span>
+      <div className="flex flex-col items-center bg-[#111d3a] p-3 rounded-xl border border-[#2a3a5c] shadow-sm">
+        <CircleDot className="w-6 h-6 text-[#00c853] mb-1" />
+        <span className="text-2xl font-bold text-white">{free}</span>
+        <span className="text-xs text-[#8899bb] uppercase tracking-wider font-semibold">Livres</span>
       </div>
       
-      <div className="flex flex-col items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-        <Clock className="w-6 h-6 text-yellow-500 mb-1" />
-        <span className="text-2xl font-bold text-slate-800">{reserved}</span>
-        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold text-center">Reservados</span>
+      <div className="flex flex-col items-center bg-[#111d3a] p-3 rounded-xl border border-[#2a3a5c] shadow-sm">
+        <Clock className="w-6 h-6 text-[#f5a623] mb-1" />
+        <span className="text-2xl font-bold text-white">{reserved}</span>
+        <span className="text-xs text-[#8899bb] uppercase tracking-wider font-semibold text-center">Reservados</span>
       </div>
 
-      <div className="flex flex-col items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-        <CheckCircle2 className="w-6 h-6 text-blue-500 mb-1" />
-        <span className="text-2xl font-bold text-slate-800">{paid}</span>
-        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Pagos</span>
+      <div className="flex flex-col items-center bg-[#111d3a] p-3 rounded-xl border border-[#2a3a5c] shadow-sm">
+        <CheckCircle2 className="w-6 h-6 text-[#1e88e5] mb-1" />
+        <span className="text-2xl font-bold text-white">{paid}</span>
+        <span className="text-xs text-[#8899bb] uppercase tracking-wider font-semibold">Pagos</span>
       </div>
     </div>
   )

@@ -46,38 +46,40 @@ export function ClientLoginModal({ isOpen, onOpenChange, onLogin }: ClientLoginM
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white border-0 shadow-2xl">
+      <DialogContent className="sm:max-w-md bg-[#111d3a] border border-[#2a3a5c] shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-slate-800">
+          <DialogTitle className="text-2xl font-bold text-white">
             Meus Números
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-[#8899bb]">
             Informe seus dados usados na hora da compra para ver suas rifas.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-2">
-            <Label>Telefone</Label>
+            <Label className="text-[#8899bb]">Telefone</Label>
             <Input 
               placeholder="(11) 99999-9999"
               value={phone}
               onChange={(e) => setPhone(formatPhone(e.target.value))}
               required
+              className="bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
             />
           </div>
           <div className="space-y-2">
-            <Label>E-mail</Label>
+            <Label className="text-[#8899bb]">E-mail</Label>
             <Input 
               type="email"
               placeholder="seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
             />
           </div>
 
-          <Button type="submit" disabled={!isValida} className="w-full bg-purple-600 hover:bg-purple-700">
+          <Button type="submit" disabled={!isValida} className="w-full bg-gradient-to-r from-[#f5a623] to-[#e8941a] hover:from-[#e8941a] hover:to-[#d4810f] text-[#0a1128] font-bold">
             Pesquisar Compras
           </Button>
         </form>

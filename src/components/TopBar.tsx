@@ -8,15 +8,16 @@ export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean,
   const [isMyNumbersOpen, setIsMyNumbersOpen] = useState(false);
 
   return (
-    <div className="w-full h-16 border-b border-white/20 bg-white/10 backdrop-blur-md flex items-center px-4 md:px-8 justify-between sticky top-0 z-40">
-      <Link to="/" className="flex items-center gap-2 text-white font-bold text-xl hover:opacity-80 transition-opacity">
-        <span className="bg-gradient-to-tr from-pink-500 to-purple-500 text-transparent bg-clip-text">Win</span>Raffle
+    <div className="w-full h-16 border-b border-[#2a3a5c]/50 bg-[#0a1128]/90 backdrop-blur-md flex items-center px-4 md:px-8 justify-between sticky top-0 z-40">
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+        <span className="gold-shimmer font-extrabold text-2xl" style={{ fontFamily: 'Outfit, sans-serif' }}>NAI</span>
+        <span className="text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Premiações</span>
       </Link>
       
       <div className="flex items-center gap-3">
         <Button 
           variant="ghost" 
-          className="text-white hover:text-purple-200" 
+          className="text-[#f5a623] hover:text-[#ffd700] hover:bg-[#f5a623]/10" 
           onClick={() => setIsMyNumbersOpen(true)}
         >
           <ReceiptText className="w-5 h-5 mr-2" />
@@ -24,7 +25,7 @@ export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean,
         </Button>
 
         {onWinnersClick && (
-          <Button variant="ghost" className="text-white hover:text-purple-200" onClick={onWinnersClick}>
+          <Button variant="ghost" className="text-[#f5a623] hover:text-[#ffd700] hover:bg-[#f5a623]/10" onClick={onWinnersClick}>
             <Trophy className="w-5 h-5 mr-2" />
             <span className="hidden md:inline">Ganhadores</span>
           </Button>
@@ -32,13 +33,13 @@ export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean,
         
         {isAdmin ? (
           <Link to="/admin/dashboard">
-            <Button variant="secondary" className="font-semibold shadow-sm">
+            <Button className="font-semibold shadow-sm bg-[#f5a623] hover:bg-[#e8941a] text-[#0a1128]">
               <ShieldCheck className="w-4 h-4 mr-2" /> Painel
             </Button>
           </Link>
         ) : (
           <Link to="/admin">
-            <Button variant="secondary" className="font-semibold shadow-sm">
+            <Button className="font-semibold shadow-sm bg-[#1a2744] hover:bg-[#2a3a5c] text-[#f5a623] border border-[#f5a623]/30">
               Entrar
             </Button>
           </Link>

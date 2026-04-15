@@ -84,18 +84,18 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#111d3a] border border-[#2a3a5c]">
         <DialogHeader>
-          <div className="mx-auto bg-yellow-100 w-12 h-12 flex items-center justify-center rounded-full mb-2">
-            <Trophy className="w-6 h-6 text-yellow-600" />
+          <div className="mx-auto bg-[#ffd700]/15 w-12 h-12 flex items-center justify-center rounded-full mb-2 border border-[#ffd700]/30">
+            <Trophy className="w-6 h-6 text-[#ffd700]" />
           </div>
-          <DialogTitle className="text-center text-xl">Informar Resultado</DialogTitle>
+          <DialogTitle className="text-center text-xl text-white">Informar Resultado</DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Selecione o número vencedor:</label>
+          <label className="block text-sm font-medium text-[#8899bb] mb-2">Selecione o número vencedor:</label>
           <select 
-            className="w-full h-10 px-3 border border-slate-300 rounded-md bg-white"
+            className="w-full h-10 px-3 border border-[#2a3a5c] rounded-md bg-[#0a1128] text-white"
             value={selectedNumber ?? ''}
             onChange={(e) => setSelectedNumber(e.target.value ? parseInt(e.target.value) : null)}
           >
@@ -107,8 +107,8 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" disabled={selectedNumber === null} onClick={handleConfirm}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-[#2a3a5c] text-[#8899bb] hover:text-white hover:bg-[#1a2744]">Cancelar</Button>
+          <Button className="bg-gradient-to-r from-[#ffd700] to-[#f5a623] hover:from-[#f5a623] hover:to-[#e8941a] text-[#0a1128] font-bold" disabled={selectedNumber === null} onClick={handleConfirm}>
             Salvar Resultado
           </Button>
         </DialogFooter>
