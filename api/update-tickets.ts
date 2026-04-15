@@ -28,7 +28,8 @@ export default async function handler(req: Request) {
       reserved_at: t.reservedAt || null,
     }));
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/tickets`, {
+    // Usando on_conflict para garantir que o Supabase saiba como tratar duplicados
+    const res = await fetch(`${supabaseUrl}/rest/v1/tickets?on_conflict=raffle_id,number`, {
       method: 'POST',
       headers: {
         'apikey': supabaseKey!,

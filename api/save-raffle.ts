@@ -33,7 +33,8 @@ export default async function handler(req: Request) {
       created_at: body.createdAt || new Date().toISOString(),
     };
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/raffles`, {
+    // Usando on_conflict=id para permitir edição de rifas existentes
+    const res = await fetch(`${supabaseUrl}/rest/v1/raffles?on_conflict=id`, {
       method: 'POST',
       headers: {
         'apikey': supabaseKey!,
