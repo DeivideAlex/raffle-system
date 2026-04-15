@@ -27,9 +27,7 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
     if (selectedNumber === null) return;
     
     try {
-      // Check if number was paid in DB
       const numbers: RaffleNumber[] = await api.getTickets(raffle.id!);
-      
       const target = numbers.find(n => n.number === selectedNumber);
       
       if (!target || target.status !== 'paid') {
@@ -37,18 +35,8 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
         return;
       }
 
-      // Update raffle in DB
       const updatedRaffle = { ...raffle, winnerNumber: selectedNumber };
       await api.saveRaffle(updatedRaffle);
-
-      // Add to winners history in DB
-      let winners = [];
-      try {
-        winners = await api.getWinners();
-        if (!Array.isArray(winners)) winners = [];
-      } catch (e) {
-        winners = [];
-      }
 
       const newWinner = {
         raffleId: raffle.id,
@@ -60,8 +48,7 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
         prizeImage: raffle.prizeImage
       };
       
-      winners.push(newWinner);
-      await api.saveWinners(winners);
+      await api.saveWinners([newWinner]);
 
       toast.success('Ganhador registrado com sucesso!');
       onWinnerSelected();

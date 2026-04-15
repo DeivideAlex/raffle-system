@@ -12,29 +12,38 @@ export default async function handler(req: Request) {
 
   try {
     const body = await req.json();
-    const normalizedPhone = body.phone.replace(/\D/g, '');
-    const purchaseId = `purchase:${normalizedPhone}:${Date.now()}`;
-    body.phone = normalizedPhone;
-    body.id = purchaseId;
+    const normalizedPhone = (body.phone || '').replace(/\D/g, '');
+    const purchaseId = body.id || `purchase-${normalizedPhone}-${Date.now()}`;
     
     const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c`, {
+    const row = {
+      id: purchaseId,
+      "raffleId": body.raffleId,
+      numbers: body.numbers, 
+      phone: normalizedPhone,
+      email: body.email || '',
+      "totalAmount": parseFloat(body.totalAmount) || 0,
+      status: body.status || 'pending',
+      "purchaseDate": body.purchaseDate || new Date().toISOString(),
+    };
+
+    const res = await fetch(`${supabaseUrl}/rest/v1/purchases`, {
       method: 'POST',
       headers: {
-        'apikey': supabaseKey,
+        'apikey': supabaseKey!,
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates'
       },
-      body: JSON.stringify({ key: purchaseId, value: body })
+      body: JSON.stringify(row)
     });
     
     if (!res.ok) {
-        const err = await res.text();
-       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
+      const err = await res.text();
+      return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
     return new Response(JSON.stringify({ success: true, id: purchaseId }), {

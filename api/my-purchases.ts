@@ -15,33 +15,33 @@ export default async function handler(req: Request) {
     const search = url.searchParams.get('phone') || url.searchParams.get('email');
     if (!search) throw new Error('Termo de busca é obrigatório');
     
-    const normalizedSearch = search.replace(/\D/g, ''); 
-    
     const rawSupabaseUrl = process.env.SUPABASE_URL || "https://ggafunjazgsxxjkbmiwv.supabase.co";
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    const query = search.includes('@') 
-      ? `value->>email=eq.${search}` 
-      : `key=like.purchase:${normalizedSearch}:%25`;
+    let query: string;
+    if (search.includes('@')) {
+      query = `email=eq.${encodeURIComponent(search)}`;
+    } else {
+      const normalizedPhone = search.replace(/\D/g, '');
+      query = `phone=eq.${encodeURIComponent(normalizedPhone)}`;
+    }
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&${query}`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/purchases?${query}&select=*&order=purchaseDate.desc`, {
       method: 'GET',
       headers: {
-        'apikey': supabaseKey,
+        'apikey': supabaseKey!,
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json'
       }
     });
     
     if (!res.ok) {
-        const err = await res.text();
-       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
+      const err = await res.text();
+      return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    const data = await res.json();
-    const records = data.map((d: any) => d.value);
-
+    const records = await res.json();
     return new Response(JSON.stringify(records), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
