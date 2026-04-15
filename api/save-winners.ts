@@ -18,12 +18,12 @@ export default async function handler(req: Request) {
 
     const newWinners = Array.isArray(winners) ? winners : [winners];
     const rows = newWinners.map((w: any) => ({
-      "raffleId": w.raffleId || null,
-      "raffleName": w.raffleName,
-      "prizeValue": w.prizeValue,
-      "winnerNumber": w.winnerNumber,
-      "winnerName": w.winnerName,
-      "prizeImage": w.prizeImage || null,
+      raffle_id: w.raffleId || null,
+      raffle_name: w.raffleName,
+      prize_value: w.prizeValue,
+      winner_number: w.winnerNumber,
+      winner_name: w.winnerName,
+      prize_image: w.prizeImage || null,
       date: w.date || new Date().toISOString(),
     }));
 

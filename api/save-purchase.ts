@@ -21,13 +21,13 @@ export default async function handler(req: Request) {
 
     const row = {
       id: purchaseId,
-      "raffleId": body.raffleId,
+      raffle_id: body.raffleId,
       numbers: body.numbers, 
       phone: normalizedPhone,
       email: body.email || '',
-      "totalAmount": parseFloat(body.totalAmount) || 0,
+      total_amount: parseFloat(body.totalAmount) || 0,
       status: body.status || 'pending',
-      "purchaseDate": body.purchaseDate || new Date().toISOString(),
+      purchase_date: body.purchaseDate || new Date().toISOString(),
     };
 
     const res = await fetch(`${supabaseUrl}/rest/v1/purchases`, {

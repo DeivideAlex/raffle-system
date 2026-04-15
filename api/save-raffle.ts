@@ -20,17 +20,17 @@ export default async function handler(req: Request) {
 
     const row = {
       id: raffleId,
-      "prizeName": body.prizeName,
-      "prizeValue": body.prizeValue,
-      "prizeDescription": body.prizeDescription || '',
-      "ticketPrice": parseFloat(body.ticketPrice) || 0,
-      "totalNumbers": parseInt(body.totalNumbers) || 100,
-      "prizeImage": body.prizeImage || '',
-      "endDate": body.endDate,
-      "winnerNumber": body.winnerNumber ?? null,
+      prize_name: body.prizeName,
+      prize_value: body.prizeValue,
+      prize_description: body.prizeDescription || '',
+      ticket_price: parseFloat(body.ticketPrice) || 0,
+      total_numbers: parseInt(body.totalNumbers) || 100,
+      prize_image: body.prizeImage || '',
+      end_date: body.endDate,
+      winner_number: body.winnerNumber ?? null,
       status: body.status || 'active',
       type: body.type || 'numbers',
-      "createdAt": body.createdAt || new Date().toISOString(),
+      created_at: body.createdAt || new Date().toISOString(),
     };
 
     const res = await fetch(`${supabaseUrl}/rest/v1/raffles`, {

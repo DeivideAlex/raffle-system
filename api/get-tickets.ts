@@ -19,7 +19,7 @@ export default async function handler(req: Request) {
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/tickets?raffleId=eq.${encodeURIComponent(raffleId)}&select=number,status,ownerPhone,ownerEmail,reservedAt&order=number.asc`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/tickets?raffle_id=eq.${encodeURIComponent(raffleId)}&select=*&order=number.asc`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey!,
@@ -37,9 +37,9 @@ export default async function handler(req: Request) {
     const tickets = data.map((t: any) => ({
       number: t.number,
       status: t.status,
-      owner: t.ownerPhone || undefined,
-      email: t.ownerEmail || undefined,
-      reservedAt: t.reservedAt || undefined,
+      owner: t.owner_phone || undefined,
+      email: t.owner_email || undefined,
+      reservedAt: t.reserved_at || undefined,
     }));
 
     return new Response(JSON.stringify(tickets), {

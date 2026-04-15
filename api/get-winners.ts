@@ -29,8 +29,19 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    const winners = await res.json();
-    return new Response(JSON.stringify(winners), {
+    const data = await res.json();
+    const mapped = data.map((w: any) => ({
+        id: w.id,
+        raffleId: w.raffle_id,
+        raffleName: w.raffle_name,
+        prizeValue: w.prize_value,
+        winnerNumber: w.winner_number,
+        winnerName: w.winner_name,
+        prizeImage: w.prize_image,
+        date: w.date
+    }));
+
+    return new Response(JSON.stringify(mapped), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {

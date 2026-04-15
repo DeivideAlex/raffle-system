@@ -20,12 +20,12 @@ export default async function handler(req: Request) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
     const rows = tickets.map((t: any) => ({
-      "raffleId": raffleId,
+      raffle_id: raffleId,
       number: t.number,
       status: t.status || 'free',
-      "ownerPhone": t.owner || null,
-      "ownerEmail": t.email || null,
-      "reservedAt": t.reservedAt || null,
+      owner_phone: t.owner || null,
+      owner_email: t.email || null,
+      reserved_at: t.reservedAt || null,
     }));
 
     const res = await fetch(`${supabaseUrl}/rest/v1/tickets`, {

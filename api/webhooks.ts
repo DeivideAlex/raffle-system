@@ -44,11 +44,11 @@ export default async function handler(req: any, res: any) {
               body: JSON.stringify({ status: 'paid' })
             });
 
-            const raffleId = purchase.raffleId;
+            const raffleId = purchase.raffle_id;
             const numbers: number[] = purchase.numbers;
             
             for (const num of numbers) {
-              await fetch(`${supabaseUrl}/rest/v1/tickets?raffleId=eq.${encodeURIComponent(raffleId)}&number=eq.${num}&status=eq.reserved`, {
+              await fetch(`${supabaseUrl}/rest/v1/tickets?raffle_id=eq.${encodeURIComponent(raffleId)}&number=eq.${num}&status=eq.reserved`, {
                 method: 'PATCH',
                 headers: { 
                   'apikey': supabaseKey!, 

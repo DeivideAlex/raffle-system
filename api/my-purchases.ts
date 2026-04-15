@@ -27,7 +27,7 @@ export default async function handler(req: Request) {
       query = `phone=eq.${encodeURIComponent(normalizedPhone)}`;
     }
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/purchases?${query}&select=*&order=purchaseDate.desc`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/purchases?${query}&select=*&order=purchase_date.desc`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey!,
@@ -41,8 +41,19 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: corsHeaders });
     }
 
-    const records = await res.json();
-    return new Response(JSON.stringify(records), {
+    const data = await res.json();
+    const mapped = data.map((p: any) => ({
+        id: p.id,
+        raffleId: p.raffle_id,
+        numbers: p.numbers,
+        phone: p.phone,
+        email: p.email,
+        totalAmount: p.total_amount,
+        status: p.status,
+        purchaseDate: p.purchase_date
+    }));
+
+    return new Response(JSON.stringify(mapped), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {

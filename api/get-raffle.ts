@@ -19,7 +19,6 @@ export default async function handler(req: Request) {
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    // Busca na tabela 'raffles'
     const res = await fetch(`${supabaseUrl}/rest/v1/raffles?id=eq.${encodeURIComponent(id)}&select=*`, {
       method: 'GET',
       headers: {
@@ -39,7 +38,23 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: 'Rifa não encontrada' }), { status: 404, headers: corsHeaders });
     }
 
-    return new Response(JSON.stringify(data[0]), {
+    const r = data[0];
+    const mapped = {
+        id: r.id,
+        prizeName: r.prize_name,
+        prizeValue: r.prize_value,
+        prizeDescription: r.prize_description,
+        ticketPrice: r.ticket_price,
+        totalNumbers: String(r.total_numbers),
+        prizeImage: r.prize_image,
+        endDate: r.end_date,
+        winnerNumber: r.winner_number,
+        status: r.status,
+        type: r.type,
+        createdAt: r.created_at
+    };
+
+    return new Response(JSON.stringify(mapped), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {

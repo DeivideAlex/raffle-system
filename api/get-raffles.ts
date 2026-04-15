@@ -15,8 +15,7 @@ export default async function handler(req: Request) {
     const supabaseUrl = new URL(rawSupabaseUrl).origin;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    // Migrando para a tabela relacional 'raffles'
-    const res = await fetch(`${supabaseUrl}/rest/v1/raffles?select=*&order=createdAt.desc`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/raffles?select=*&order=created_at.desc`, {
       method: 'GET',
       headers: {
         'apikey': supabaseKey!,
@@ -30,7 +29,23 @@ export default async function handler(req: Request) {
        return new Response(JSON.stringify({ error: 'Supabase error: ' + err }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const raffles = await res.json();
+    const data = await res.json();
+    
+    // Mapear de volta para o formato que o Frontend espera (camelCase)
+    const raffles = data.map((r: any) => ({
+        id: r.id,
+        prizeName: r.prize_name,
+        prizeValue: r.prize_value,
+        prizeDescription: r.prize_description,
+        ticketPrice: r.ticket_price,
+        totalNumbers: String(r.total_numbers),
+        prizeImage: r.prize_image,
+        endDate: r.end_date,
+        winnerNumber: r.winner_number,
+        status: r.status,
+        type: r.type,
+        createdAt: r.created_at
+    }));
 
     return new Response(JSON.stringify(raffles), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
