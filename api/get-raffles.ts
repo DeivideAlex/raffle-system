@@ -11,19 +11,15 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const rawSupabaseUrl = "https://ggafunjazgsxxjkbmiwv.supabase.co";
-    const supabaseUrl = new URL(rawSupabaseUrl).origin;
-    // Testando com o código que você enviou
-    const supabaseKey = "7b0852e56e8c73cb1f6ceaaadc1284daea95b0d055acf178bb1a3f936fa9a89c";
-
-    // Voltando para a tabela kv_store que você usava antes
-    const res = await fetch(`${supabaseUrl}/rest/v1/kv_store_0639182c?select=value&key=like.raffle:%25`, {
-      method: 'GET',
+    const supabaseUrl = "https://ggafunjazgsxxjkbmiwv.supabase.co";
+    
+    // Tentando chamar a Edge Function que você mencionou
+    const res = await fetch(`${supabaseUrl}/functions/v1/dynamic-action`, {
+      method: 'POST', // Geralmente Edge Functions usam POST
       headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({ action: 'get-raffles' }) // Chute de payload comum
     });
     
     if (!res.ok) {
