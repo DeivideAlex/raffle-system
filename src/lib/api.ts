@@ -1,7 +1,7 @@
 import { Purchase } from '@/app/types';
 
 const SUPABASE_URL = "https://ggafunjazgsxxjkbmiwv.supabase.co";
-export const FN_URL = '/api';
+export const FN_URL = import.meta.env.DEV ? 'https://raffle-system-chi.vercel.app/api' : '/api';
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {
