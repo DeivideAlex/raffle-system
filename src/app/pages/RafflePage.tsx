@@ -25,6 +25,7 @@ export function RafflePage() {
   const [buyerInfo, setBuyerInfo] = useState<{ phone: string, email: string } | null>(null);
   const [initPoint, setInitPoint] = useState<string | undefined>();
   const [pixCode, setPixCode] = useState<string | undefined>();
+  const [paymentId, setPaymentId] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Load raffle and numbers data
@@ -154,6 +155,7 @@ export function RafflePage() {
         
         setInitPoint(mpData.init_point);
         setPixCode(mpData.pix_code);
+        setPaymentId(mpData.paymentId);
       } catch (mpErr) {
         console.error('MP Error:', mpErr);
         toast.error('Ganhamos o seu registro! Mas houve um erro ao criar o link de pagamento. Tente novamente em Ver Meus números.');
@@ -306,6 +308,7 @@ export function RafflePage() {
           onPaid={handlePaymentConfirmed} 
           initPoint={initPoint}
           pixCode={pixCode}
+          paymentId={paymentId}
         />
       )}
     </div>
