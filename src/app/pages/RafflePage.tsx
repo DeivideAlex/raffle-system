@@ -309,6 +309,7 @@ export function RafflePage() {
           initPoint={initPoint}
           pixCode={pixCode}
           paymentId={paymentId}
+          raffleId={raffleId!}
         />
       )}
     </div>

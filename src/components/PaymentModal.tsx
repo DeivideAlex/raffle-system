@@ -18,6 +18,7 @@ interface PaymentModalProps {
   totalAmount: number;
   ticketCount: number;
   numbers: number[];
+  raffleId: string;
   onPaid: () => void;
 }
 
@@ -30,6 +31,7 @@ export function PaymentModal({
   totalAmount, 
   ticketCount, 
   numbers,
+  raffleId,
   onPaid 
 }: PaymentModalProps) {
   const [timeLeft, setTimeLeft] = useState(10 * 60);
@@ -62,16 +64,38 @@ export function PaymentModal({
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (paymentId && !isApproved && isOpen) {
+    if (!isApproved && isOpen && raffleId) {
       interval = setInterval(async () => {
         try {
-          const response = await fetch(`https://raffle-system-chi.vercel.app/api/check-payment?id=${paymentId}`);
-          const data = await response.json();
-          if (data.status === 'approved') {
-            setIsApproved(true);
-            toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
-            onPaid();
-            clearInterval(interval);
+          // 1. Tenta verificar pelo ID do PIX (se existir)
+          if (paymentId) {
+            const response = await fetch(`https://raffle-system-chi.vercel.app/api/check-payment?id=${paymentId}`);
+            const data = await response.json();
+            if (data.status === 'approved') {
+              setIsApproved(true);
+              toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
+              onPaid();
+              clearInterval(interval);
+              return;
+            }
+          }
+          
+          // 2. Se pagou pelo Checkout Pro, verifica no Banco de Dados se o Webhook já aprovou
+          const ticketsResponse = await fetch(`https://raffle-system-chi.vercel.app/api/get-tickets?raffleId=${raffleId}`);
+          if (ticketsResponse.ok) {
+            const tickets = await ticketsResponse.json();
+            // Verifica se todos os números escolhidos estão com status 'paid'
+            const allPaid = numbers.every(num => {
+              const ticket = tickets.find((t: any) => t.number === num);
+              return ticket && ticket.status === 'paid';
+            });
+            
+            if (allPaid && numbers.length > 0) {
+              setIsApproved(true);
+              toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
+              onPaid();
+              clearInterval(interval);
+            }
           }
         } catch (error) {
           console.error('Erro ao verificar pagamento:', error);
@@ -80,7 +104,7 @@ export function PaymentModal({
     }
 
     return () => clearInterval(interval);
-  }, [paymentId, isApproved, isOpen]);
+  }, [paymentId, isApproved, isOpen, raffleId, numbers]);
 
   const handleCopyCode = () => {
     if (pixCode) {
