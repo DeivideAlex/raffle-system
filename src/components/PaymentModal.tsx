@@ -81,7 +81,7 @@ export function PaymentModal({
           }
           
           // 2. Se pagou pelo Checkout Pro, verifica no Banco de Dados se o Webhook já aprovou
-          const ticketsResponse = await fetch(`https://raffle-system-chi.vercel.app/api/get-tickets?raffleId=${raffleId}`);
+          const ticketsResponse = await fetch(`https://raffle-system-chi.vercel.app/api/get-tickets?raffleId=${raffleId}&t=${Date.now()}`);
           if (ticketsResponse.ok) {
             const tickets = await ticketsResponse.json();
             // Verifica se todos os números escolhidos estão com status 'paid'
