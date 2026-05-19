@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,8 +6,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, MapPin, ExternalLink, CheckCircle } from 'lucide-react';
+import { Copy, MapPin, ExternalLink, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const BASE_URL = 'https://raffle-system-chi.vercel.app';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface PaymentModalProps {
   ticketCount: number;
   numbers: number[];
   raffleId: string;
+  purchaseId?: string;
   onPaid: () => void;
 }
 
@@ -32,10 +35,15 @@ export function PaymentModal({
   ticketCount, 
   numbers,
   raffleId,
+  purchaseId,
   onPaid 
 }: PaymentModalProps) {
   const [timeLeft, setTimeLeft] = useState(10 * 60);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // --- Temporizador ---
   useEffect(() => {
     if (!isOpen) {
       setTimeLeft(10 * 60);
@@ -56,55 +64,122 @@ export function PaymentModal({
     return () => clearInterval(timer);
   }, [isOpen, onOpenChange]);
 
-  const mins = Math.floor(timeLeft / 60);
-  const secs = timeLeft % 60;
-
-  const [isApproved, setIsApproved] = useState(false);
+  // --- Polling de pagamento ---
+  const handleApproval = () => {
+    if (isApproved) return;
+    setIsApproved(true);
+    toast.success('🎉 PAGAMENTO APROVADO! Seus números foram confirmados.');
+    onPaid();
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    if (!isOpen || isApproved) return;
 
-    if (!isApproved && isOpen && raffleId) {
-      interval = setInterval(async () => {
-        try {
-          // 1. Tenta verificar pelo ID do PIX (se existir)
-          if (paymentId) {
-            const response = await fetch(`https://raffle-system-chi.vercel.app/api/check-payment?id=${paymentId}`);
-            const data = await response.json();
+    const checkPayment = async () => {
+      try {
+        // --- Estratégia 1: confirm-payment pelo purchaseId (busca por external_reference no MP) ---
+        if (purchaseId) {
+          const res = await fetch(`${BASE_URL}/api/confirm-payment?purchaseId=${encodeURIComponent(purchaseId)}&t=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
             if (data.status === 'approved') {
-              setIsApproved(true);
-              toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
-              onPaid();
-              clearInterval(interval);
+              handleApproval();
               return;
             }
           }
-          
-          // 2. Se pagou pelo Checkout Pro, verifica no Banco de Dados se o Webhook já aprovou
-          const ticketsResponse = await fetch(`https://raffle-system-chi.vercel.app/api/get-tickets?raffleId=${raffleId}&t=${Date.now()}`);
-          if (ticketsResponse.ok) {
-            const tickets = await ticketsResponse.json();
-            // Verifica se todos os números escolhidos estão com status 'paid'
+        }
+
+        // --- Estratégia 2: check-payment pelo paymentId do PIX direto ---
+        if (paymentId) {
+          const res = await fetch(`${BASE_URL}/api/check-payment?id=${paymentId}&t=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'approved') {
+              handleApproval();
+              return;
+            }
+          }
+        }
+
+        // --- Estratégia 3: verifica tickets no banco (fallback para webhook) ---
+        if (raffleId && numbers.length > 0) {
+          const res = await fetch(`${BASE_URL}/api/get-tickets?raffleId=${raffleId}&t=${Date.now()}`);
+          if (res.ok) {
+            const tickets = await res.json();
             const allPaid = numbers.every(num => {
               const ticket = tickets.find((t: any) => t.number === num);
               return ticket && ticket.status === 'paid';
             });
-            
-            if (allPaid && numbers.length > 0) {
-              setIsApproved(true);
-              toast.success('PAGAMENTO APROVADO! Seus números foram confirmados.');
-              onPaid();
-              clearInterval(interval);
+            if (allPaid) {
+              handleApproval();
             }
           }
-        } catch (error) {
-          console.error('Erro ao verificar pagamento:', error);
         }
-      }, 5000);
-    }
+      } catch (error) {
+        console.error('Erro ao verificar pagamento:', error);
+      }
+    };
 
-    return () => clearInterval(interval);
-  }, [paymentId, isApproved, isOpen, raffleId, numbers]);
+    // Verificação imediata + a cada 5 segundos
+    checkPayment();
+    intervalRef.current = setInterval(checkPayment, 5000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isApproved, purchaseId, paymentId, raffleId]);
+
+  // --- Verificação manual ao retornar do Checkout Pro ---
+  const handleOpenCheckout = () => {
+    window.open(initPoint || '#', '_blank');
+    // Após abrir o checkout, aumenta a frequência do polling por 60s
+    let quickChecks = 0;
+    const quickInterval = setInterval(async () => {
+      quickChecks++;
+      if (quickChecks >= 12 || isApproved) {
+        clearInterval(quickInterval);
+        return;
+      }
+      try {
+        if (purchaseId) {
+          const res = await fetch(`${BASE_URL}/api/confirm-payment?purchaseId=${encodeURIComponent(purchaseId)}&t=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'approved') {
+              handleApproval();
+              clearInterval(quickInterval);
+            }
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }, 5000);
+  };
+
+  const handleManualVerify = async () => {
+    setIsVerifying(true);
+    try {
+      if (purchaseId) {
+        const res = await fetch(`${BASE_URL}/api/confirm-payment?purchaseId=${encodeURIComponent(purchaseId)}&t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'approved') {
+            handleApproval();
+            return;
+          }
+        }
+      }
+      toast.info('Pagamento ainda não confirmado. Aguarde alguns instantes.');
+    } catch (e) {
+      toast.error('Erro ao verificar. Tente novamente.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
 
   const handleCopyCode = () => {
     if (pixCode) {
@@ -113,6 +188,7 @@ export function PaymentModal({
     }
   };
 
+  // --- Tela de sucesso ---
   if (isApproved) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -132,6 +208,7 @@ export function PaymentModal({
     );
   }
 
+  // --- Tela principal de pagamento ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] overflow-hidden bg-[#111d3a] border border-[#2a3a5c] shadow-2xl">
@@ -176,9 +253,23 @@ export function PaymentModal({
                </div>
             </div>
 
-            <Button className="w-full bg-[#1e88e5] hover:bg-[#1976d2] text-white font-bold h-12 rounded-xl group transition-all" onClick={() => window.open(initPoint || '#', '_blank')}>
+            <Button className="w-full bg-[#1e88e5] hover:bg-[#1976d2] text-white font-bold h-12 rounded-xl group transition-all" onClick={handleOpenCheckout}>
               Abrir Checkout Seguro (Mercado Pago)
               <ExternalLink className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+
+            {/* Botão de verificação manual */}
+            <Button
+              variant="outline"
+              className="w-full border-[#2a3a5c] text-[#8899bb] hover:text-white hover:bg-[#1a2d52] h-10 rounded-xl font-medium text-sm"
+              onClick={handleManualVerify}
+              disabled={isVerifying}
+            >
+              {isVerifying ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Verificando...</>
+              ) : (
+                'Já paguei — Verificar agora'
+              )}
             </Button>
 
             <div className="flex items-start gap-3 bg-[#00c853]/10 border border-[#00c853]/20 rounded-xl p-4">

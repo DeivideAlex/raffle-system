@@ -26,6 +26,7 @@ export function RafflePage() {
   const [initPoint, setInitPoint] = useState<string | undefined>();
   const [pixCode, setPixCode] = useState<string | undefined>();
   const [paymentId, setPaymentId] = useState<string | undefined>();
+  const [purchaseId, setPurchaseId] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Load raffle and numbers data
@@ -135,7 +136,8 @@ export function RafflePage() {
         purchaseDate: new Date().toISOString()
       });
 
-      const purchaseId = purchaseRes.id;
+      const newPurchaseId = purchaseRes.id;
+      setPurchaseId(newPurchaseId);
 
       setBuyerInfo({ phone, email });
       setIsPhoneModalOpen(false);
@@ -150,7 +152,7 @@ export function RafflePage() {
           phone,
           email,
           totalAmount,
-          purchaseId
+          purchaseId: newPurchaseId
         });
         
         setInitPoint(mpData.init_point);
@@ -181,22 +183,19 @@ export function RafflePage() {
     setNumbers(updatedNumbers);
     await api.updateTickets(raffleId!, updatedNumbers);
     
-    // In future: push purchase to /dynamic-action/save-purchase or localStorage 'purchases'
-    const purchaseId = Date.now().toString();
-    const purchase = {
-      id: purchaseId,
-      raffleId: raffleId!,
-      numbers: selectedNumbers,
-      phone: buyerInfo.phone,
-      email: buyerInfo.email,
-      totalAmount: selectedNumbers.length * parseFloat(raffle.ticketPrice),
-      status: 'paid',
-      purchaseDate: new Date().toISOString()
-    };
-
-    // No need to save in localStorage purchases since savePurchase was called in handlePhoneSubmit
-    // But we might want to update the status to paid in the DB purchase record too.
-    await api.savePurchase({ ...purchase, status: 'paid' });
+    // Update the purchase record in the DB to paid status
+    if (purchaseId) {
+      await api.savePurchase({
+        id: purchaseId,
+        raffleId: raffleId!,
+        numbers: selectedNumbers,
+        phone: buyerInfo.phone,
+        email: buyerInfo.email,
+        totalAmount: selectedNumbers.length * parseFloat(raffle.ticketPrice),
+        status: 'paid',
+        purchaseDate: new Date().toISOString()
+      });
+    }
 
     toast.success('Pagamento carregado! Redirecionando...');
     setIsPaymentModalOpen(false);
@@ -309,6 +308,7 @@ export function RafflePage() {
           initPoint={initPoint}
           pixCode={pixCode}
           paymentId={paymentId}
+          purchaseId={purchaseId}
           raffleId={raffleId!}
         />
       )}
