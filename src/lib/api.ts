@@ -76,6 +76,26 @@ export const api = {
     return handleResponse(res);
   },
 
+  createCardPayment: async (data: {
+    cardToken: string;
+    paymentMethodId: string;
+    installments: number;
+    totalAmount: number;
+    email: string;
+    docType: string;
+    docNumber: string;
+    purchaseId: string;
+    raffleName: string;
+    numbers: number[];
+  }) => {
+    const res = await fetch(`${FN_URL}/create-card-payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
   getWinners: async () => {
     const res = await fetch(`${FN_URL}/get-winners`);
     return handleResponse(res);

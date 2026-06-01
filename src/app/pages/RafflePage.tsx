@@ -310,6 +310,8 @@ export function RafflePage() {
           paymentId={paymentId}
           purchaseId={purchaseId}
           raffleId={raffleId!}
+          raffleName={raffle.prizeName}
+          email={buyerInfo.email}
         />
       )}
     </div>
