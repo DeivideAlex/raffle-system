@@ -10,7 +10,7 @@ declare global {
 }
 
 const BASE_URL = 'https://raffle-system-chi.vercel.app';
-const MP_PUBLIC_KEY = 'TEST-6002262f-3fe7-475d-a8e8-a5e6a1725a69';
+const MP_PUBLIC_KEY = import.meta.env.VITE_MP_PUBLIC_KEY as string;
 
 interface PaymentModalProps {
   isOpen: boolean;
