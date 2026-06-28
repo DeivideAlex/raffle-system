@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { Purchase } from '@/app/types';
 import { Users, CheckCircle2, Clock, DollarSign, Search, X } from 'lucide-react';
@@ -173,13 +172,13 @@ export function ParticipantsModal({ isOpen, onOpenChange, raffleId, raffleName }
                         {p.name || <span className="text-[#5a6a8a] italic font-normal">Sem nome</span>}
                       </p>
                       {p.status === 'paid' ? (
-                        <Badge className="shrink-0 bg-[#00c853]/15 text-[#00c853] border border-[#00c853]/30 text-[10px] px-2 py-0">
+                        <span className="shrink-0 inline-flex items-center bg-[#00c853]/15 text-[#00c853] border border-[#00c853]/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
                           <CheckCircle2 className="w-2.5 h-2.5 mr-1" /> PAGO
-                        </Badge>
+                        </span>
                       ) : (
-                        <Badge className="shrink-0 bg-[#f5a623]/15 text-[#f5a623] border border-[#f5a623]/30 text-[10px] px-2 py-0">
+                        <span className="shrink-0 inline-flex items-center bg-[#f5a623]/15 text-[#f5a623] border border-[#f5a623]/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
                           <Clock className="w-2.5 h-2.5 mr-1" /> PENDENTE
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     {/* Contatos */}
