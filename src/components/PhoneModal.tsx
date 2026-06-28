@@ -13,10 +13,11 @@ import { Label } from '@/components/ui/label';
 interface PhoneModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (phone: string, email: string) => void;
+  onSubmit: (name: string, phone: string, email: string) => void;
 }
 
 export function PhoneModal({ isOpen, onOpenChange, onSubmit }: PhoneModalProps) {
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
 
@@ -44,11 +45,12 @@ export function PhoneModal({ isOpen, onOpenChange, onSubmit }: PhoneModalProps) 
     const rawPhone = phone.replace(/\D/g, '');
     if (rawPhone.length < 11) return;
     if (!email.includes('@')) return;
+    if (!name.trim()) return;
     
-    onSubmit(rawPhone, email);
+    onSubmit(name.trim(), rawPhone, email);
   };
 
-  const isValida = phone.replace(/\D/g, '').length === 11 && email.includes('@');
+  const isValida = name.trim().length >= 2 && phone.replace(/\D/g, '').length === 11 && email.includes('@');
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -58,11 +60,23 @@ export function PhoneModal({ isOpen, onOpenChange, onSubmit }: PhoneModalProps) 
             Reserva de Números
           </DialogTitle>
           <DialogDescription className="text-[#8899bb] font-medium">
-            Seus números ficarão reservados por <span className="text-[#f5a623] font-bold">10 minutos</span>. Informe seu WhatsApp e E-mail para confirmar a reserva e prosseguir.
+            Seus números ficarão reservados por <span className="text-[#f5a623] font-bold">10 minutos</span>. Informe seus dados para confirmar a reserva e prosseguir.
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-[#8899bb]">Nome Completo</Label>
+            <Input
+              id="name"
+              placeholder="Seu nome completo"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="text-lg bg-[#0a1128] border-[#2a3a5c] text-white placeholder:text-[#5a6a8a]"
+              required
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-[#8899bb]">Telefone (WhatsApp)</Label>
             <Input

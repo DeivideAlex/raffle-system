@@ -23,6 +23,7 @@ export default async function handler(req: Request) {
       id: purchaseId,
       raffle_id: body.raffleId,
       numbers: body.numbers, 
+      name: body.name || '',
       phone: normalizedPhone,
       email: body.email || '',
       total_amount: parseFloat(body.totalAmount) || 0,

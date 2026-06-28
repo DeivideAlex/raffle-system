@@ -37,6 +37,7 @@ export interface Purchase {
   id: string;
   raffleId: string;
   numbers: number[];
+  name?: string;
   phone: string;
   email: string;
   totalAmount: number;
