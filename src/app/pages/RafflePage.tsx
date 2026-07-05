@@ -222,7 +222,7 @@ export function RafflePage() {
 
   return (
     <div className="min-h-screen bg-[#0a1128] pb-32">
-      <TopBar />
+      <TopBar hideAdmin />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl relative">
         <PrizeHeader 

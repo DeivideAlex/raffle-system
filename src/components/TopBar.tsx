@@ -4,7 +4,7 @@ import { Trophy, ShieldCheck, ReceiptText } from 'lucide-react';
 import { useState } from 'react';
 import { MyNumbersModal } from './MyNumbersModal';
 
-export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean, onWinnersClick?: () => void }) {
+export function TopBar({ isAdmin = false, onWinnersClick, hideAdmin = false }: { isAdmin?: boolean, onWinnersClick?: () => void, hideAdmin?: boolean }) {
   const [isMyNumbersOpen, setIsMyNumbersOpen] = useState(false);
 
   return (
@@ -31,7 +31,7 @@ export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean,
           </Button>
         )}
         
-        {isAdmin ? (
+        {!hideAdmin && (isAdmin ? (
           <Link to="/admin/dashboard">
             <Button className="font-semibold shadow-sm bg-[#f5a623] hover:bg-[#e8941a] text-[#0a1128]">
               <ShieldCheck className="w-4 h-4 mr-2" /> Painel
@@ -43,7 +43,7 @@ export function TopBar({ isAdmin = false, onWinnersClick }: { isAdmin?: boolean,
               Entrar
             </Button>
           </Link>
-        )}
+        ))}
       </div>
 
       <MyNumbersModal isOpen={isMyNumbersOpen} onOpenChange={setIsMyNumbersOpen} />
