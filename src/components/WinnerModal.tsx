@@ -31,23 +31,35 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
     const raw = inputValue.trim();
     if (!raw) return;
 
-    const num = parseInt(raw, 10);
+    // Suporta múltiplos números separados por vírgula, espaço ou ponto-e-vírgula
+    const parts = raw.split(/[,;\s]+/).filter(Boolean);
+    const errors: string[] = [];
+    const toAdd: number[] = [];
 
-    if (isNaN(num)) {
-      toast.error('Digite um número válido.');
-      return;
-    }
-    if (num < 0 || num >= totalNumbers) {
-      toast.error(`O número deve estar entre 00 e ${String(totalNumbers - 1).padStart(2, '0')}.`);
-      return;
-    }
-    if (winnerNumbers.includes(num)) {
-      toast.warning('Esse número já foi adicionado.');
-      setInputValue('');
-      return;
+    for (const part of parts) {
+      const num = parseInt(part, 10);
+      if (isNaN(num)) {
+        errors.push(`"${part}" não é válido`);
+        continue;
+      }
+      if (num < 0 || num >= totalNumbers) {
+        errors.push(`${String(num).padStart(2, '0')} fora do intervalo (00–${String(totalNumbers - 1).padStart(2, '0')})`);
+        continue;
+      }
+      if (winnerNumbers.includes(num) || toAdd.includes(num)) {
+        errors.push(`${String(num).padStart(2, '0')} já adicionado`);
+        continue;
+      }
+      toAdd.push(num);
     }
 
-    setWinnerNumbers(prev => [...prev, num]);
+    if (errors.length > 0) {
+      toast.error(errors.join(' • '));
+    }
+    if (toAdd.length > 0) {
+      setWinnerNumbers(prev => [...prev, ...toAdd]);
+      toast.success(`${toAdd.map(n => String(n).padStart(2,'0')).join(', ')} adicionado(s)!`);
+    }
     setInputValue('');
   };
 
@@ -56,7 +68,7 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       addNumber();
     }
@@ -129,13 +141,11 @@ export function WinnerModal({ isOpen, onOpenChange, raffle, onWinnerSelected }: 
             </label>
             <div className="flex gap-2">
               <input
-                type="number"
-                min={0}
-                max={totalNumbers - 1}
+                type="text"
                 value={inputValue}
                 onChange={e => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={`Ex: 07`}
+                placeholder="Ex: 07, 42, 80"
                 className="flex-1 h-10 px-3 border border-[#2a3a5c] rounded-md bg-[#0a1128] text-white placeholder-[#5a6a8a] outline-none focus:border-[#f5a623] transition-colors font-mono text-sm"
               />
               <Button
