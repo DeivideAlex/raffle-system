@@ -16,6 +16,7 @@ export const api = {
     raffleId: string;
     raffleName: string;
     numbers: number[];
+    name?: string;
     phone: string;
     email: string;
     totalAmount: number;
@@ -108,5 +109,15 @@ export const api = {
       body: JSON.stringify(winners)
     });
     return handleResponse(res);
-  }
+  },
+
+  getParticipants: async (raffleId: string, status: 'paid' | 'all' = 'paid') => {
+    const res = await fetch(`${FN_URL}/get-participants?raffleId=${encodeURIComponent(raffleId)}&status=${status}`);
+    return handleResponse(res);
+  },
+
+  getRevenue: async (): Promise<{ totalRevenue: number; byRaffle: Record<string, number> }> => {
+    const res = await fetch(`${FN_URL}/get-revenue`);
+    return handleResponse(res);
+  },
 };

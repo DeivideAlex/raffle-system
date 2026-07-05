@@ -52,13 +52,13 @@ export function ClientLoginModal({ isOpen, onOpenChange, onLogin }: ClientLoginM
             Meus Números
           </DialogTitle>
           <DialogDescription className="text-[#8899bb]">
-            Informe seus dados usados na hora da compra para ver suas rifas.
+            Informe o telefone e e-mail usados na hora da compra para ver suas rifas.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-2">
-            <Label className="text-[#8899bb]">Telefone</Label>
+            <Label className="text-[#8899bb]">Telefone (WhatsApp)</Label>
             <Input 
               placeholder="(11) 99999-9999"
               value={phone}

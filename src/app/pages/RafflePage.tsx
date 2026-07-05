@@ -22,7 +22,7 @@ export function RafflePage() {
   
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [buyerInfo, setBuyerInfo] = useState<{ phone: string, email: string } | null>(null);
+  const [buyerInfo, setBuyerInfo] = useState<{ name: string, phone: string, email: string } | null>(null);
   const [initPoint, setInitPoint] = useState<string | undefined>();
   const [pixCode, setPixCode] = useState<string | undefined>();
   const [paymentId, setPaymentId] = useState<string | undefined>();
@@ -102,7 +102,7 @@ export function RafflePage() {
     setIsPhoneModalOpen(true);
   };
 
-  const handlePhoneSubmit = async (phone: string, email: string) => {
+  const handlePhoneSubmit = async (name: string, phone: string, email: string) => {
     if (!raffle) return;
     setIsProcessing(true);
 
@@ -129,6 +129,7 @@ export function RafflePage() {
         raffleId: raffleId!,
         raffleName: raffle.prizeName,
         numbers: selectedNumbers,
+        name,
         phone,
         email,
         totalAmount,
@@ -139,7 +140,7 @@ export function RafflePage() {
       const newPurchaseId = purchaseRes.id;
       setPurchaseId(newPurchaseId);
 
-      setBuyerInfo({ phone, email });
+      setBuyerInfo({ name, phone, email });
       setIsPhoneModalOpen(false);
       setIsPaymentModalOpen(true);
 
@@ -149,6 +150,7 @@ export function RafflePage() {
           raffleId: raffleId!,
           raffleName: raffle.prizeName,
           numbers: selectedNumbers,
+          name,
           phone,
           email,
           totalAmount,
@@ -189,6 +191,7 @@ export function RafflePage() {
         id: purchaseId,
         raffleId: raffleId!,
         numbers: selectedNumbers,
+        name: buyerInfo.name,
         phone: buyerInfo.phone,
         email: buyerInfo.email,
         totalAmount: selectedNumbers.length * parseFloat(raffle.ticketPrice),

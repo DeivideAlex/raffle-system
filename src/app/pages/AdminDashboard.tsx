@@ -4,8 +4,9 @@ import { RaffleData } from '../types';
 import { TopBar } from '@/components/TopBar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, BarChart3, Users, Ticket, Trash2, Eye, Trophy } from 'lucide-react';
+import { PlusCircle, BarChart3, Users, Ticket, Trash2, Eye, Trophy, DollarSign } from 'lucide-react';
 import { WinnerModal } from '@/components/WinnerModal';
+import { ParticipantsModal } from '@/components/ParticipantsModal';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { ShieldCheck } from 'lucide-react';
@@ -15,6 +16,9 @@ export function AdminDashboard() {
   const navigate = useNavigate();
   const [raffles, setRaffles] = useState<RaffleData[]>([]);
   const [selectedRaffleToWin, setSelectedRaffleToWin] = useState<RaffleData | null>(null);
+  const [selectedRaffleParticipants, setSelectedRaffleParticipants] = useState<RaffleData | null>(null);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [revenueByRaffle, setRevenueByRaffle] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const auth = localStorage.getItem('adminAuth');
@@ -24,6 +28,7 @@ export function AdminDashboard() {
     }
 
     loadRaffles();
+    loadRevenue();
   }, [navigate]);
 
   const loadRaffles = async () => {
@@ -32,6 +37,16 @@ export function AdminDashboard() {
       setRaffles(data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (error) {
       toast.error('Erro ao carregar rifas do banco de dados');
+    }
+  };
+
+  const loadRevenue = async () => {
+    try {
+      const { totalRevenue, byRaffle } = await api.getRevenue();
+      setTotalRevenue(totalRevenue);
+      setRevenueByRaffle(byRaffle);
+    } catch (error) {
+      console.error('Erro ao carregar receita:', error);
     }
   };
 
@@ -50,9 +65,6 @@ export function AdminDashboard() {
   };
 
   const totalRaffles = raffles.length;
-  // TODO: extract actual paid numbers from mock later for correct sum
-  const totalPaid = 0; 
-  const totalRevenue = 0;
 
   return (
     <div className="min-h-screen bg-[#0a1128]">
@@ -78,7 +90,8 @@ export function AdminDashboard() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Cards de estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="bg-[#111d3a] border border-[#2a3a5c] shadow-sm">
             <CardContent className="p-6">
               <Ticket className="w-8 h-8 text-[#f5a623] mb-2" />
@@ -87,10 +100,17 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
           <Card className="bg-[#111d3a] border border-[#2a3a5c] shadow-sm">
-             <CardContent className="p-6">
+            <CardContent className="p-6">
               <BarChart3 className="w-8 h-8 text-[#00c853] mb-2" />
-              <p className="text-sm font-semibold text-[#8899bb] uppercase">Receita Total</p>
-              <p className="text-3xl font-black text-white">R$ {totalRevenue.toFixed(2).replace('.',',')}</p>
+              <p className="text-sm font-semibold text-[#8899bb] uppercase">Receita Total (Pagos)</p>
+              <p className="text-3xl font-black text-white">R$ {totalRevenue.toFixed(2).replace('.', ',')}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-[#1a2744] to-[#111d3a] border border-[#f5a623]/20 shadow-sm">
+            <CardContent className="p-6">
+              <DollarSign className="w-8 h-8 text-[#f5a623] mb-2" />
+              <p className="text-sm font-semibold text-[#8899bb] uppercase">Rifas com Arrecadação</p>
+              <p className="text-3xl font-black text-white">{Object.keys(revenueByRaffle).length}</p>
             </CardContent>
           </Card>
         </div>
@@ -98,43 +118,60 @@ export function AdminDashboard() {
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-white mb-4">Todas as Rifas</h3>
           
-          {raffles.map(r => (
-            <Card key={r.id} className="border border-[#2a3a5c] shadow-sm overflow-hidden bg-[#111d3a]">
-              <div className="flex flex-col md:flex-row">
-                <div className="w-full md:w-32 h-32 bg-[#0a1128] shrink-0">
-                  <img src={r.prizeImage} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-4 md:p-6 flex-1 flex flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-bold text-lg text-white">{r.prizeName}</h4>
-                      <p className="text-sm text-[#8899bb]">{r.totalNumbers} números • R$ {parseFloat(r.ticketPrice).toFixed(2).replace('.',',')} cada</p>
+          {raffles.map(r => {
+            const raffleRevenue = revenueByRaffle[r.id!] || 0;
+            return (
+              <Card key={r.id} className="border border-[#2a3a5c] shadow-sm overflow-hidden bg-[#111d3a]">
+                <div className="flex flex-col md:flex-row">
+                  <div className="w-full md:w-32 h-32 bg-[#0a1128] shrink-0">
+                    <img src={r.prizeImage} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-4 md:p-6 flex-1 flex flex-col justify-between">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-lg text-white">{r.prizeName}</h4>
+                        <p className="text-sm text-[#8899bb]">{r.totalNumbers} números • R$ {parseFloat(r.ticketPrice).toFixed(2).replace('.',',')} cada</p>
+                        {/* Valor arrecadado por rifa */}
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <DollarSign className="w-3.5 h-3.5 text-[#00c853]" />
+                          <span className="text-sm font-bold text-[#00c853]">
+                            R$ {raffleRevenue.toFixed(2).replace('.', ',')} arrecadados
+                          </span>
+                        </div>
+                      </div>
+                      {r.winnerNumber ? (
+                        <span className="bg-[#ffd700]/15 text-[#ffd700] px-3 py-1 rounded-full text-xs font-bold uppercase inline-flex items-center border border-[#ffd700]/30">
+                          <Trophy className="w-3 h-3 mr-1" /> Sorteada
+                        </span>
+                      ) : (new Date(r.endDate) < new Date() ? (
+                        <span className="bg-red-500/15 text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase border border-red-500/30">Finalizada</span>
+                      ) : (
+                        <span className="bg-[#00c853]/15 text-[#00c853] px-3 py-1 rounded-full text-xs font-bold uppercase border border-[#00c853]/30">Ativa</span>
+                      ))}
                     </div>
-                    {r.winnerNumber ? (
-                      <span className="bg-[#ffd700]/15 text-[#ffd700] px-3 py-1 rounded-full text-xs font-bold uppercase inline-flex items-center border border-[#ffd700]/30">
-                        <Trophy className="w-3 h-3 mr-1" /> Sorteada
-                      </span>
-                    ) : (new Date(r.endDate) < new Date() ? (
-                      <span className="bg-red-500/15 text-red-400 px-3 py-1 rounded-full text-xs font-bold uppercase border border-red-500/30">Finalizada</span>
-                    ) : (
-                      <span className="bg-[#00c853]/15 text-[#00c853] px-3 py-1 rounded-full text-xs font-bold uppercase border border-[#00c853]/30">Ativa</span>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2 mt-4 mt-auto">
-                    <Link to={`/r/${r.id}`}>
-                      <Button variant="outline" size="sm" className="border-[#2a3a5c] text-[#8899bb] hover:text-white hover:bg-[#1a2744]"><Eye className="w-4 h-4 mr-1"/> Ver</Button>
-                    </Link>
-                    <Button variant="outline" size="sm" className="border-[#2a3a5c] text-[#8899bb] hover:text-white hover:bg-[#1a2744]"><Users className="w-4 h-4 mr-1"/> Participantes</Button>
-                    {!r.winnerNumber && (
-                      <Button variant="outline" size="sm" className="text-[#f5a623] border-[#f5a623]/30 bg-[#f5a623]/10 hover:bg-[#f5a623]/20" onClick={() => setSelectedRaffleToWin(r)}><Trophy className="w-4 h-4 mr-1"/> Informar Resultado</Button>
-                    )}
-                    <Button variant="ghost" size="sm" className="text-red-400 ml-auto hover:bg-red-500/10" onClick={() => handleDelete(r.id!)}><Trash2 className="w-4 h-4"/></Button>
+                    
+                    <div className="flex gap-2 mt-4 mt-auto flex-wrap">
+                      <Link to={`/r/${r.id}`}>
+                        <Button variant="outline" size="sm" className="border-[#2a3a5c] text-[#8899bb] hover:text-white hover:bg-[#1a2744]"><Eye className="w-4 h-4 mr-1"/>Ver</Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-[#1e88e5]/40 text-[#1e88e5] hover:bg-[#1e88e5]/10 bg-[#1e88e5]/5"
+                        onClick={() => setSelectedRaffleParticipants(r)}
+                      >
+                        <Users className="w-4 h-4 mr-1"/> Participantes
+                      </Button>
+                      {!r.winnerNumber && (
+                        <Button variant="outline" size="sm" className="text-[#f5a623] border-[#f5a623]/30 bg-[#f5a623]/10 hover:bg-[#f5a623]/20" onClick={() => setSelectedRaffleToWin(r)}><Trophy className="w-4 h-4 mr-1"/> Informar Resultado</Button>
+                      )}
+                      <Button variant="ghost" size="sm" className="text-red-400 ml-auto hover:bg-red-500/10" onClick={() => handleDelete(r.id!)}><Trash2 className="w-4 h-4"/></Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
           {raffles.length === 0 && (
             <p className="text-[#5a6a8a] p-8 text-center bg-[#111d3a] rounded-xl border border-dashed border-[#2a3a5c]">Nenhuma rifa criada ainda.</p>
           )}
@@ -147,6 +184,15 @@ export function AdminDashboard() {
           onOpenChange={(v) => !v && setSelectedRaffleToWin(null)}
           raffle={selectedRaffleToWin}
           onWinnerSelected={loadRaffles}
+        />
+      )}
+
+      {selectedRaffleParticipants && (
+        <ParticipantsModal
+          isOpen={!!selectedRaffleParticipants}
+          onOpenChange={(v) => !v && setSelectedRaffleParticipants(null)}
+          raffleId={selectedRaffleParticipants.id!}
+          raffleName={selectedRaffleParticipants.prizeName}
         />
       )}
     </div>

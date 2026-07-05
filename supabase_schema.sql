@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   id TEXT PRIMARY KEY,
   raffle_id TEXT REFERENCES raffles(id) ON DELETE CASCADE,
   numbers INTEGER[] NOT NULL,
+  name TEXT DEFAULT '',
   phone TEXT NOT NULL,
   email TEXT NOT NULL,
   total_amount DECIMAL(10,2) NOT NULL,
